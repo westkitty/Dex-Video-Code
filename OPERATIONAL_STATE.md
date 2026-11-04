@@ -11,7 +11,7 @@ Updated 2026-11-04. This file records observed state for this checkout; observat
 - Phase 04: PARTIAL. Rights/provenance schema exists; no imported private/user assets. Pilot uses original authored SVGs.
 - Phase 05: TECHNICAL PASS / VISUAL PENDING. Original motion-graphics pilot is 16.000 seconds, 1280×720, 24 fps, H.264, silent, no subtitle track. Full decode passed; recorded SHA-256: `ac7232df261ddf5a0313ab4b101d9dfd149b639adea8089db4c62ec4bad519fe`. Local output is `examples/jobs/pilot-a-reviewed/outputs/dv_mw2kewjt-bdfxdmy8/master.mp4`; pack is adjacent under `handoff-dv_mw2kewjt-bdfxdmy8/`. Five encoded frames were visually inspected; human artistic acceptance remains pending.
 - Phases 06–09: NOT COMPLETE. Illustrated/source import, audio, specialist adapters, three distinct pilots, and broader artistic acceptance remain open.
-- Phase 10: Git commit/push pending. Project settings/user activation pending.
+- Phase 10: Initial source commit `865cabb058049099be2035095b69b196a3436bf9` was pushed to the private `main`; its remote ref was verified. Local generated job workspaces are excluded from Git. Project settings/user activation pending.
 
 ## Capability evidence
 
@@ -22,4 +22,4 @@ Updated 2026-11-04. This file records observed state for this checkout; observat
 
 ## Next bounded work
 
-Repeat only the read-only bridge `doctor` after the MacBook DEX//REACH scheduler admits a task, then finish staged source review, commit/push the private repository, and compare local HEAD to remote `main`. User must install the Project instructions and confirm private GitHub access for activation.
+Repeat the read-only CLI bridge `doctor` after the MacBook DEX//REACH scheduler admits a task. User must install the Project instructions and confirm private GitHub access for activation.

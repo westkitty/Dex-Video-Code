@@ -30,3 +30,4 @@ job-state.json
 handoff-*/
 frames-svg/
 frames-png/
+/examples/jobs/

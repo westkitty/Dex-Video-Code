@@ -1,25 +1,24 @@
 # Operational state
 
-Updated 2026-11-04. This file records observed state for this checkout; observations age and are not claims of future availability.
+Updated 2026-11-04. This file records observed facts for this checkout; capabilities and remote states can change.
 
-## Current milestone
+## Repair milestone
 
-- Phase 00: PARTIAL. Authorized host was MacBook-Air.local / `andrew`, arm64, Node v26.13.0, FFmpeg 9.0.2, 8 GiB RAM. Local free disk was about 10 GiB at initial probe. DEX//REACH reported a MacBook memory warning and an online, idle/healthy Big Mac; values are transient.
-- Selected local clones `Image_Gen` (`8b7091d`), `StinkweaselArts` (`aa369e4`), and `Code_Video` (`44ec628`) were clean on `main` at inspection. Read relevant README/operator state directly. No other Westkitty repository was changed.
-- Phase 00B: PASS. Isolated project Git root created at `Dex-Video-Code/`, branch `main`; exact new GitHub target is private `https://github.com/westkitty/Dex-Video-Code`.
-- Phases 01–03: PASS for initial local slice: versioned CreativeJob schema, bounded route selection, six CLI operations, read-only capability probes, path/adapter gates, symlink confinement and regression tests. Failed job `dv_mw2k8ccp-z7k31yag` resumed after the SVG-decoder failure, then passed encoding and verification (`attempts=2`).
-- Phase 04: PARTIAL. Rights/provenance schema exists; no imported private/user assets. Pilot uses original authored SVGs.
-- Phase 05: TECHNICAL PASS / VISUAL PENDING. Original motion-graphics pilot is 16.000 seconds, 1280×720, 24 fps, H.264, silent, no subtitle track. Full decode passed; recorded SHA-256: `ac7232df261ddf5a0313ab4b101d9dfd149b639adea8089db4c62ec4bad519fe`. Local output is `examples/jobs/pilot-a-reviewed/outputs/dv_mw2kewjt-bdfxdmy8/master.mp4`; pack is adjacent under `handoff-dv_mw2kewjt-bdfxdmy8/`. Five encoded frames were visually inspected; human artistic acceptance remains pending.
-- Phases 06–09: NOT COMPLETE. Illustrated/source import, audio, specialist adapters, three distinct pilots, and broader artistic acceptance remain open.
-- Phase 10: Initial source commit `865cabb058049099be2035095b69b196a3436bf9` was pushed to the private `main`; its remote ref was verified. Local generated job workspaces are excluded from Git. Project settings/user activation pending.
+- Target checkout `Dex-Video-Code` under the verified authorized workspace, branch `main`; repair began from HEAD `7e71d9808122e1aa684a60f3913f185eeb537409`, clean and tracking `origin/main` at inspection.
+- Confirmed the three audit prompts had all been routed to the same 16-second signal animation. The v1.1 interpreter now preserves their requested durations, deliverable/subject/action/technique and restrictions and explicitly blocks unsupported illustrated narrative, audio-only and articulated 3D work.
+- Local renderer now consumes the validated geometric plan, supports silent 1280×720/24 fps H.264 MP4 for 1–30 seconds, and writes to an atomic no-replace destination with a per-job process lock. It removes temporary frames after rendering.
+- A 1-second no-text shape transformation was produced in an isolated temporary directory. `ffprobe` read 1.000 seconds, 1280×720 and 24 fps; full decode and the spec check reported `TECHNICAL_PASS_VISUAL_PENDING`. A frame was inspected. Artistic acceptance remains pending.
+- Fresh validation after the renderer correction: TypeScript build and `npm test` passed 23/23. The documented nested `plan --out` flow, no-overwrite behavior, v1 migration, path/symlink gate (including refusal before creating outside directories), approval rejection, unsupported-route handling, no-clobber race, failed-job resume, and media metadata checks are covered.
+- Final bounded 1-second production smoke: H.264 MP4, 1280×720, 24 fps, 1.000 seconds, silent, no subtitle stream; full decode and SHA-256/spec verification passed as `TECHNICAL_PASS_VISUAL_PENDING` (SHA-256 `daa1cbcc56b39179453737b8f609a478d06f75dd08b729572c4a9416a7ec7432`). A frame extracted from the encoded MP4 was inspected after the background rasterization fix. This is a renderer smoke, not a finished film or artistic approval.
+- Existing recorded 16-second pilot SHA `ac7232df261ddf5a0313ab4b101d9dfd149b639adea8089db4c62ec4bad519fe` is historical proof for the earlier renderer, not proof of this changed renderer.
+- Audio, still image, narrative illustration/character motion and articulated 3D remain blocked. No spend, cloud, uploads, private assets, voice/identity generation or subtitles were used.
 
-## Capability evidence
+## Integration status
 
-- `director doctor --json` observed the host at runtime, Node, FFmpeg, ffprobe and native frame rasterizer; it marks HyperFrames and Remotion `AVAILABLE_UNPROVEN`, Blender specialist route `DORMANT`, and ComfyUI `EXCLUDED`.
-- MacBook DEX//REACH node was online with `aiAccess=on`. Its `read_file` tool successfully read the local README. Its `start_process` call for CLI `doctor --json` was refused because the single substantive slot was full with an uncoordinated heavy workload (`COORDINATOR_WAIT_TIMEOUT`); current CLI execution state `BLOCKED_BRIDGE`.
-- Project settings and private GitHub connector access from inside the `code video` Project are not changed/proved by this checkout. Status `PROJECT_ACTIVATION_PENDING`.
-- No audio, generated voices, captions, private references, credentials, model weights, or outputs are included in source control.
+- The source repo alone is not a registered ChatGPT tool. `PROJECT_ACTIVATION_PENDING` remains until the owner installs the existing Project instructions and independently verifies settings/access.
+- GitHub connector listed `westkitty/Dex-Video-Code` as private and permitted source access. DEX//REACH listed `macbook-air.local` online, `aiAccess=on`, but the exact `start_process` invocation for read-only CLI `doctor --json` returned `COORDINATOR_WAIT_TIMEOUT: substantive slots exhausted (2/1, including 2 uncoordinated heavy workload(s))`. No successful remote CLI handshake occurred. Status `BLOCKED_BRIDGE`; retry after the scheduler admits a bounded task.
 
-## Next bounded work
+## Remaining original studio gates
 
-Repeat the read-only CLI bridge `doctor` after the MacBook DEX//REACH scheduler admits a task. User must install the Project instructions and confirm private GitHub access for activation.
+- Phases 04 and 06–09 remain partial/not complete: asset-rights intake, audio and specialist routes, distinct production pilots, and human creative acceptance are not implemented or verified. This repair does not turn the coordinator into a finished studio.
+- Repair publication still requires the final diff/privacy review, commit and push readback. At this observation, HEAD and origin/main both equal `7e71d9808122e1aa684a60f3913f185eeb537409`; repair edits are local and uncommitted.

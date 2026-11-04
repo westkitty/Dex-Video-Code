@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import type { Capability } from "./types.js";
+import { planCreativeJob } from "./job.js";
 
 function probe(command: string): { version?: string; found: boolean; reason: string } {
   const r = spawnSync(command, ["-version"], { encoding: "utf8", timeout: 3000 });
@@ -24,24 +25,7 @@ export function discoverCapabilities(): Capability[] {
     { id:"comfyui", state:"EXCLUDED", host:"none", reason:"Explicitly excluded by product contract.", cost:"none", privacy:"local" }
   ];
 }
-export function planRoutes(prompt: string, capabilities = discoverCapabilities()): { selected: string; alternatives: string[]; rationale: string; requires3dRig: boolean; routes: ReturnType<typeof routesFor> } {
-  const p = prompt.toLowerCase();
-  const explicit3d = /\b(articulated 3d|genuine(?:ly)? 3d acting|rigged 3d|3d puppet|blender rig)\b/.test(p);
-  const routes = routesFor(explicit3d, capabilities);
-  const eligible = routes.filter(r => r.available && r.id !== "comfyui");
-  const winner = explicit3d ? routes[0]! : (eligible[0] ?? routes.find(r => r.id === "motion-graphics")!);
-  return { selected:winner.id, alternatives:routes.filter(r => r.id !== winner.id && r.id !== "comfyui").map(r=>r.id), rationale:winner.rationale, requires3dRig:winner.requires3dRig, routes };
-}
-function routesFor(explicit3d: boolean, caps: Capability[]) {
-  const ffmpeg = caps.find(c=>c.id==="local.ffmpeg")?.state === "VERIFIED";
-  const rasterizer = caps.find(c=>c.id==="local.rasterizer")?.state === "VERIFIED";
-  return explicit3d ? [
-    {id:"articulated-3d",score:100,selected:true,requires3dRig:true,available:false,rationale:"The brief explicitly requires articulated 3D performance; the specialist rig and contact proof are mandatory, and no live Blender adapter is enabled."},
-    {id:"motion-graphics",score:10,selected:false,requires3dRig:false,available:ffmpeg && rasterizer,rationale:"Available fallback would violate the explicit performance requirement."}
-  ] : [
-    {id:"motion-graphics",score:90,selected:true,requires3dRig:false,available:ffmpeg && rasterizer,rationale:"Authored kinetic typography and shape animation fit an information-led graphic brief; local FFmpeg is verified and no character rig is needed."},
-    {id:"illustrated-2.5d",score:65,selected:false,requires3dRig:false,available:false,rationale:"Suitable when approved source artwork exists; this job has no supplied art."},
-    {id:"articulated-3d",score:30,selected:false,requires3dRig:true,available:false,rationale:"Unnecessary for this graphic brief; live native rig/render adapter is not established."},
-    {id:"comfyui",score:0,selected:false,requires3dRig:false,available:false,rationale:"Excluded by policy."}
-  ];
+export function planRoutes(prompt: string, capabilities = discoverCapabilities()): { selected: string; alternatives: string[]; rationale: string; requires3dRig: boolean; routes: Array<{id:string;score:number;selected:boolean;requires3dRig:boolean;available:boolean;rationale:string}> } {
+  const job=planCreativeJob(prompt,capabilities);const id=job.route_decision.selected;const requires3dRig=job.creative_intent.proof_requirements.includes("native articulated rig");const route={id,score:100,selected:true,requires3dRig,available:job.route_decision.status==="READY",rationale:job.route_decision.reason};
+  return {selected:id,alternatives:[],rationale:job.route_decision.reason,requires3dRig,routes:[route]};
 }

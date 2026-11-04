@@ -1,0 +1,26 @@
+{
+  "name": "dex-video-code",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prompt-first, medium-agnostic creative production coordinator",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "director": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-schema.mjs",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "director": "node dist/src/cli.js"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

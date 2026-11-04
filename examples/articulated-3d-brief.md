@@ -1,0 +1,1 @@
+A short requiring genuinely articulated 3D performance with visible contact and deformation. This route requires a native rig, mesh evidence, and a verified Blender specialist adapter; no motion-graphic fallback is acceptable.

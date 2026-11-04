@@ -1,0 +1,1 @@
+A sound-led film built around exact user-supplied audio. Preserve the original recording and add only explicitly requested visual treatment. No audio generation by default; this route is not enabled yet.

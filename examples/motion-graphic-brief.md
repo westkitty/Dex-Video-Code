@@ -1,0 +1,1 @@
+A sixteen-second, silent motion-graphics short: a faint signal traces a path through darkness, finds another point, and resolves into a small luminous mark. Clean typography, deliberate pacing, no character rig, captions off.

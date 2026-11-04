@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "job_id": "dv_example-motion-graphic",
+  "source_prompt": "A sixteen-second silent motion graphic: a faint signal crosses a dark field, traces a path, finds an answer, and resolves in a luminous mark. Original typography and shapes, no narration, no captions.",
+  "brief": {
+    "deliverable_type": "video",
+    "format": "mp4",
+    "aspect_ratio": "16:9",
+    "duration_seconds": 16,
+    "tone": "quietly hopeful, precise",
+    "exclusions": [
+      "no narration",
+      "no subtitles",
+      "no captions",
+      "no new voice or music"
+    ],
+    "captions": "off"
+  },
+  "route_decision": {
+    "selected": "motion-graphics",
+    "alternatives": [
+      "illustrated-2.5d",
+      "articulated-3d"
+    ],
+    "reason": "Original kinetic typography and shape animation fit the brief without imposing character or 3D production.",
+    "evidence": [
+      "local FFmpeg version probe",
+      "prompt classification"
+    ]
+  },
+  "shots_or_beats": [
+    {
+      "start": 0,
+      "end": 4,
+      "purpose": "Establish an isolated signal",
+      "visual_state": "A dim field and one drifting point"
+    },
+    {
+      "start": 4,
+      "end": 10,
+      "purpose": "Build motion and anticipation",
+      "visual_state": "The point traces a path through measured rings"
+    },
+    {
+      "start": 10,
+      "end": 16,
+      "purpose": "Resolve into a clear visual payoff",
+      "visual_state": "The path closes into a bright connected mark and title"
+    }
+  ],
+  "assets": [],
+  "execution_plan": [
+    {
+      "operation": "render-original-motion-graphic",
+      "adapter": "motion-graphics-local",
+      "approval": "not_required",
+      "timeout_seconds": 240
+    }
+  ],
+  "artifacts": [
+    {
+      "role": "master",
+      "format": "video/mp4",
+      "path": "outputs/example-motion-graphic/master.mp4"
+    }
+  ],
+  "proof": {
+    "technical_status": "PLANNED",
+    "artistic_status": "PENDING_HUMAN_REVIEW",
+    "evidence": []
+  }
+}

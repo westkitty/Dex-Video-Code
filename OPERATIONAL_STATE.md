@@ -21,4 +21,4 @@ Updated 2026-11-04. This file records observed facts for this checkout; capabili
 ## Remaining original studio gates
 
 - Phases 04 and 06–09 remain partial/not complete: asset-rights intake, audio and specialist routes, distinct production pilots, and human creative acceptance are not implemented or verified. This repair does not turn the coordinator into a finished studio.
-- Repair publication still requires the final diff/privacy review, commit and push readback. At this observation, HEAD and origin/main both equal `7e71d9808122e1aa684a60f3913f185eeb537409`; repair edits are local and uncommitted.
+- The repair passed diff/privacy review, was committed and pushed to private `origin/main`, and the remote ref readback matched local `main`. The working tree was clean immediately after publication. The current Git history is the source for the exact publication SHA.

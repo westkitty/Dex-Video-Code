@@ -31,4 +31,23 @@ The verified renderer supports only silent, text-free when requested, geometric 
 npm run --silent director -- doctor --json
 ```
 
+## Existing HyperFrames bridge (separate from `director`)
+
+The `director` CLI does not yet dispatch to HyperFrames. A separate bounded
+HyperFrames controller was read and its `health` command was called through
+the authorized DEX//REACH node on Big Mac. Its commands are limited to
+`health`, `submit <project-slug> [draft|looks|delivery]`, and
+`status <job-id>`; projects must already exist inside that controller's local
+`runs/` directory and are limited to 30 seconds. Use only the discovered
+controller path and these exact operations through the exposed DEX process
+tool. Do not call the general shell with creative input or arbitrary paths.
+
+This is a verified callable DEX//REACH path to the existing local motion
+renderer, not a registered native ChatGPT tool, not a `director` adapter, and
+not proof that the `code video` Project settings were changed. The
+`docs/capability-baseline.md` and `OPERATIONAL_STATE.md` record current health,
+scheduler and pilot results. The MacBook `director doctor` attempt was
+separately refused by scheduler admission; do not treat the HyperFrames health
+call as a substitute for that CLI contract.
+
 For a GitHub + DEX//REACH handshake, read the contract, README and operational state through the authorized source connector; rediscover/fingerprint the selected node, inspect its process tool and scheduler, then run the exact read-only CLI `doctor --json` invocation and compare results. If source access, CLI or node call is denied, report `BLOCKED_BRIDGE` with the observed missing capability. Do not claim Project activation from a Git URL.

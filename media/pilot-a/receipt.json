@@ -1,0 +1,40 @@
+{
+  "receipt_version": 1,
+  "job_id": "hf-20261105t033807-a3ce89e8",
+  "route": "existing local HyperFrames controller via authenticated DEX//REACH",
+  "host": "Big Mac, arm64; fresh DEX fingerprint verified",
+  "renderer": {"name": "HyperFrames", "version": "0.8.159", "quality": "delivery"},
+  "output": {
+    "path": "media/pilot-a/pilot-a-20s.mp4 (ignored local output)",
+    "sha256": "ce1d2ac34aee1d83b78a9e02783110dd2bb174bad0b7e43616adeebec546e6bd",
+    "bytes": 1534549,
+    "container": "MP4",
+    "video_codec": "H.264",
+    "duration_seconds": 20.0,
+    "width": 960,
+    "height": 540,
+    "frame_rate": "24/1",
+    "frames": 480,
+    "audio_stream": false,
+    "subtitle_stream": false
+  },
+  "verification": {
+    "controller_full_decode": "PASS",
+    "local_copied_output_full_decode": "PASS",
+    "local_and_remote_sha256_match": true,
+    "ffprobe_streams": ["video:h264"],
+    "contact_sheet_samples_seconds": [0, 5, 10, 14, 17, 19.5],
+    "contact_sheet": {
+      "path": "media/pilot-a/renders/pilot-a-contact.jpg (ignored local output)",
+      "sha256": "b89b9d7c2f2ed9bc5c18b23e520cc334842dfee57831f2942fd17b45bf7962cc"
+    },
+    "encoded_frame_spotcheck": "PASS: path progresses across the scene and resolves between two distinct points; title copy is legible at sampled frames.",
+    "artistic_status": "HUMAN_REVIEW_PENDING"
+  },
+  "earlier_failed_attempt": {
+    "job_id": "hf-20261105t032912-b6fd6d8b",
+    "status": "FAILED",
+    "cause": "HyperFrames rejected the symlinked GSAP asset with HTTP 404 during final correctness checks.",
+    "repair": "Copied the already-installed local GSAP dependency as a regular file into the isolated pilot runtime; no repository copy or CDN was used."
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "pilot_id": "pilot-a-small-signal",
+  "brief_origin": "executor-authored noncanonical pilot brief",
+  "brief": {
+    "deliverable": "motion-design film",
+    "story": "A small signal travels through a dark field, finds another point, and links the two in a quiet visual payoff.",
+    "duration_seconds": 20,
+    "aspect_ratio": "16:9",
+    "resolution": "960x540",
+    "frame_rate": 24,
+    "sound": "intentionally silent",
+    "subtitles": "off",
+    "exclusions": ["external media", "voice", "music", "3D rig", "cloud render"]
+  },
+  "route_decision": {
+    "selected": "HyperFrames motion design on Big Mac",
+    "why": "A timed vector composition supports designed copy, a drawn path, staged reveals, and a linked visual payoff.",
+    "alternative": "Dex Video Code local geometric renderer",
+    "alternative_tradeoff": "It is locally tested but its current adapter does not support this authored 20-second text-and-path treatment."
+  },
+  "source": {
+    "project": "media/pilot-a/index.html",
+    "sha256": "1f1fd2df2fa9b036940fb03fc2e629644ba39c1f2190ef7f65ebddc0791e8d17",
+    "config": "media/pilot-a/hyperframes.json",
+    "config_sha256": "4039d2dbda6209c4c80ab49710dedddd8e1b8ae5c0bdc39393d4e4013737837e",
+    "external_assets": []
+  },
+  "beats": [
+    {"start": 0, "end": 5, "purpose": "Introduce the isolated first pulse."},
+    {"start": 5, "end": 14, "purpose": "Trace a winding line across the field."},
+    {"start": 14, "end": 17, "purpose": "Reveal a distant answering point."},
+    {"start": 17, "end": 20, "purpose": "Join both points, hold the payoff, and close."}
+  ],
+  "state": "TECHNICAL_PASS_ART_PENDING"
+}

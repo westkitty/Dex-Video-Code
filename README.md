@@ -7,9 +7,10 @@ Prompt-first, medium-agnostic creative production coordinator. The CLI interpret
 - TypeScript CLI: `doctor`, `plan`, `produce`, `status`, `verify`, `pack`.
 - Versioned CreativeJob 1.1 schema with a compatibility migration for v1 manifests.
 - Deterministic brief interpretation for medium, duration, aspect ratio, subject, actions, style, text restrictions and selected constraints. Ambiguous or unsupported production is blocked instead of silently routed to a different medium.
-- The only executable renderer is local authored geometric motion graphics: silent H.264 MP4, 1280×720, 24 fps, 1–30 seconds, captions off. It does not render narrative illustration, character performance, audio, stills or 3D. Explicit 3D performance is blocked unless a future verified specialist route is added.
+- The `director` CLI's only executable renderer is local authored geometric motion graphics: silent H.264 MP4, 1280×720, 24 fps, 1–30 seconds, captions off. It does not render narrative illustration, character performance, audio, stills or 3D. Explicit 3D performance is blocked unless a future verified specialist route is added.
+- Pilot A is an independently authored 20-second HyperFrames motion-design film. It used the existing Big Mac controller through DEX//REACH; that controller is not integrated into `director`. See [`media/pilot-a/README.md`](media/pilot-a/README.md) and the evidence-limited [capability baseline](docs/capability-baseline.md). The MP4 and frame review remain local, ignored outputs.
 - Output finalization uses a same-directory temporary encode and atomic create-if-absent linking. State locking prevents concurrent producers. Technical verification checks duration, dimensions, frame rate, streams, codec/container, subtitles, full decode and manifest SHA-256. Artistic review remains human and pending.
-- Local only: no cloud calls, uploads, model installs or incremental spend. ComfyUI is excluded.
+- Production stayed on the authorized local hosts; no public upload, cloud call, model install or additional spend occurred. ComfyUI is excluded.
 
 Requires Node.js 22+, FFmpeg/ffprobe, and an SVG rasterizer (`sips` on macOS; `magick` elsewhere) for rendering and media verification.
 

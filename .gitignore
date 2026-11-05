@@ -24,6 +24,7 @@ models/
 runs/
 outputs/
 artifacts/
+media/pilot-a/renders/
 .cache/
 .DS_Store
 job-state.json

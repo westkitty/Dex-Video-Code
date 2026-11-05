@@ -1,6 +1,6 @@
 # Drakken Terraforming Compendium — programmatic explainer
 
-A 30-second, silent, 16:9 explanation of the attached illustrated edition. The editable source is `generate.py`; `storyboard.json` records the source-grounded claims and timing. The script creates original vector diagrams and encodes them locally with ImageMagick and FFmpeg. It does not use the archive's embedded image-generation instructions, extract or reuse its artwork, make network calls, add voice/music, or enable subtitles.
+A 30-second, silent, 16:9 explanation of the attached illustrated edition. The editable source is `generate.py`; `storyboard.json` records the source-grounded claims, timing, and motion. Version 2 adds actual movement and sequential reveals, keeps figures accurate at every point in the count scene, and fixes the transformed-world colors and label contrast found during visual review. The script creates original vector diagrams and encodes them locally with ImageMagick and FFmpeg. It does not use the archive's embedded image-generation instructions, extract or reuse its artwork, make network calls, add voice/music, or enable subtitles.
 
 ## Rebuild
 
@@ -10,7 +10,7 @@ From the repository root on this Mac:
 python3 media/drakken-compendium-explainer/generate.py
 ```
 
-Requires Python 3, ImageMagick (`magick`), FFmpeg (`ffmpeg` and `ffprobe`), and the installed macOS fonts named in the script. The generated MP4, PNG frames, SVG frames and contact sheet are local ignored outputs under `renders/` and `frames-svg/`; they are excluded from Git.
+Requires Python 3, ImageMagick (`magick`), FFmpeg (`ffmpeg` and `ffprobe`), and the installed macOS fonts named in the script. The generated MP4, PNG frames, SVG frames and contact sheets are local ignored outputs under `renders/`, `frames-png/` and `frames-svg/`; they are excluded from Git. `receipt.json` records the current verified delivery artifact.
 
 ## Editorial scope
 

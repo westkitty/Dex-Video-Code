@@ -1,7 +1,27 @@
 # Operational state
 
-Updated 2026-11-04 (America/Detroit). This is current evidence for this checkout,
+Updated 2026-11-05 (America/Detroit). This is current evidence for this checkout,
 not a claim that all planned routes or Project settings are active.
+
+## Drakken explainer refinement — 2026-11-05
+
+- Rebuilt the six-scene explanation as an animated 30-second local MP4. The
+  sequence animates orbital traces, category bars, family reveals, world-system
+  transformation, chronology and containment, and evidence cards. Exact
+  category values remain fixed while bars animate, so intermediate frames do
+  not imply a false subtotal.
+- Visual review found and corrected a black SVG overlay, low-contrast body and
+  diagram labels, and overlapping count annotations. The rebuilt encoded
+  contact sheet and representative full-size frames were inspected after the
+  final encode. Current media and source hashes are recorded in
+  `media/drakken-compendium-explainer/receipt.json`.
+- Technical media checks pass: H.264 960x540, 24 fps, 720 frames, 30 seconds,
+  video-only; `ffprobe`, full `ffmpeg -xerror` decode, Python syntax, and JSON
+  parse all pass. Human artistic acceptance remains pending. Drive replacement
+  is pending until upload and metadata readback complete.
+- No audio, captions/subtitles, source illustration, ComfyUI, remote rendering,
+  cloud/API calls or spend were used. This remains an explainer, not a canon
+  update or a complete film adaptation.
 
 ## Drakken Compendium explainer — 2026-11-04
 

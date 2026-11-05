@@ -13,6 +13,12 @@ not a claim that all planned routes or Project settings are active.
   as silent H.264 MP4, 1280×720 at 24fps, for 1–30 seconds. The existing
   Big Mac HyperFrames controller is a separate motion-design route and is not
   dispatched by `director`.
+- A local read-only `npm run --silent director -- doctor --json` call passed.
+  It reported MacBook Node v26.13.0, FFmpeg/FFprobe 9.0.2 and `sips` verified;
+  no source assets were imported and spend was zero. HyperFrames remained
+  `AVAILABLE_UNPROVEN` in that local report because it did not query the
+  remote host; the separately verified Big Mac controller and Pilot A are
+  recorded below.
 - ComfyUI/Comfort UI is excluded. Captions and subtitles remain off by default.
 
 ## Pilot A — A Small Signal

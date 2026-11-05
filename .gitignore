@@ -25,6 +25,8 @@ runs/
 outputs/
 artifacts/
 media/pilot-a/renders/
+media/drakken-compendium-explainer/renders/
+media/drakken-compendium-explainer/__pycache__/
 .cache/
 .DS_Store
 job-state.json

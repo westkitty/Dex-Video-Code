@@ -1,0 +1,61 @@
+{
+  "receipt_version": 1,
+  "artifact": "renders/drakken-compendium-explainer-30s.mp4",
+  "source_code": "generate.py",
+  "source_code_sha256": "a3886c104f14dbb791f93a599964362aa5e9bcf0f0bc331ecaf8d888e74fbf9d",
+  "storyboard": "storyboard.json",
+  "storyboard_sha256": "7c3bbe8a0512c919ae92319874ab8f7d9f83a25034a1943a49f99eee5b6063a7",
+  "route": "local Python SVG generator + ImageMagick + FFmpeg",
+  "host": {"hostname": "MacBook-Air.local", "platform": "Darwin arm64"},
+  "renderer": {"imagemagick": "7.1.2-34 Q16-HDRI", "ffmpeg": "9.0.2"},
+  "output": {
+    "sha256": "007bbf3ea316a47cd7fdc80eaf5403747ac3eeceaa6122940f98c266a68e839d",
+    "bytes": 685279,
+    "container": "MP4",
+    "video_codec": "H.264",
+    "duration_seconds": 30,
+    "width": 960,
+    "height": 540,
+    "frame_rate": "24/1",
+    "frames": 720,
+    "audio_stream": false,
+    "subtitle_stream": false
+  },
+  "verification": {
+    "python_syntax": "PASS",
+    "generator_basic_stream_validation": "PASS",
+    "ffprobe": "PASS",
+    "ffmpeg_full_decode_xerror": "PASS",
+    "contact_sheet_visual_review": "PASS: six scenes show legible headings, category counts, family names, chronology and evidence caveats; no visible overlap or rendering defect at inspected frames",
+    "contact_sheet_path": "renders/encoded-contact-sheet.jpg",
+    "contact_sheet_sha256": "62893a4b2f99dcd1d231a328a2e1b693bcff2403df3c2c627e0a77926c839246",
+    "encoded_frame_samples_seconds": [2.5, 7.5, 12.5, 17.5, 22.5, 28.5],
+    "human_artistic_acceptance": "PENDING"
+  },
+  "source_inputs": [
+    {
+      "file": "Drakken_Terraforming_Compendium_Codec_Illustrated_105.pdf",
+      "sha256": "a8df0d4c2bf090f8ad9fe5fbb99314a292d141eefd77f4b1e3fb235f7ea908f3",
+      "pages_used": "2-6"
+    },
+    {
+      "file": "Drakken_Compendium_COMPLETE_105_Archive_and_Source_Guide.md",
+      "sha256": "972f7f9949910545227e44c4097791561bfc30b388b5ba60a8bb17a01925e05d",
+      "sections_used": "Catalog counts and classification; corrected integrated timeline; source authority notes"
+    }
+  ],
+  "safety": {
+    "source_art_reused": false,
+    "embedded_generation_instructions_executed": false,
+    "audio_or_voice": false,
+    "captions_or_subtitles": false,
+    "cloud_or_api": false,
+    "spend": 0,
+    "comfyui": false
+  },
+  "dex_reach": {
+    "state": "UNAVAILABLE_REAUTH_REQUIRED",
+    "observed_error": "UNAUTHORIZED / oauth_token_invalid_grant; app connection requires reauthentication",
+    "remote_render_attempted": false
+  }
+}

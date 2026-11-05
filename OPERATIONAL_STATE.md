@@ -3,6 +3,34 @@
 Updated 2026-11-04 (America/Detroit). This is current evidence for this checkout,
 not a claim that all planned routes or Project settings are active.
 
+## Drakken Compendium explainer — 2026-11-04
+
+- Created a 30-second silent programmatic explanation from the user's supplied
+  PDF and source guide. `media/drakken-compendium-explainer/generate.py` creates
+  original vector diagrams; it does not reuse the PDF illustrations or execute
+  the embedded production prompts. The editable beat map and input hashes are
+  in `media/drakken-compendium-explainer/storyboard.json`.
+- The piece distinguishes the 58 operational strains, 2 genesis entities, 35
+  unapproved historical proposals, and 10 context plates; names the eight
+  operational families; and explains the corrected Year 121 / Year 170 war
+  anchors and containment aftermath. It also states that images do not
+  establish canonical appearance and this is not canon approval.
+- Locally encoded `media/drakken-compendium-explainer/renders/drakken-compendium-explainer-30s.mp4`:
+  H.264 MP4, 960×540, 24fps, 720 frames, exactly 30 seconds, 685,279 bytes,
+  SHA-256 `007bbf3ea316a47cd7fdc80eaf5403747ac3eeceaa6122940f98c266a68e839d`.
+  `ffprobe` found one video stream and no audio/subtitle streams; FFmpeg full
+  decode passed. The six-scene contact sheet was visually inspected. Receipt:
+  `media/drakken-compendium-explainer/receipt.json`.
+- Render used local ImageMagick and FFmpeg on MacBook Air (arm64), with no
+  network calls, cloud render, spend, voice, music, or source artwork import.
+  Human artistic acceptance remains pending. This is a second media artifact,
+  not the blocked illustrated Pilot B and not evidence that `director` can
+  execute a general HyperFrames job.
+- A fresh DEX//REACH node-list request in this pass was refused with
+  `UNAUTHORIZED / oauth_token_invalid_grant`; the app connection requires
+  reauthentication. No remote render was attempted. Prior DEX/HyperFrames proof
+  remains historical and is not promoted to a current bridge check.
+
 ## Verified local implementation
 
 - The TypeScript build and `npm test` pass 23/23. Prompt regressions preserve

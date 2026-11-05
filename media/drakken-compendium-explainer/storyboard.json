@@ -1,0 +1,38 @@
+{
+  "title": "Reading the Drakken Terraforming Compendium",
+  "duration_seconds": 30,
+  "format": {"width": 960, "height": 540, "fps": 24, "container": "MP4", "video_codec": "H.264"},
+  "audio": "none",
+  "subtitles": "off",
+  "visual_method": "Original programmatic SVG diagrams, rasterized locally and assembled with FFmpeg crossfades.",
+  "source_files": [
+    {
+      "file": "Drakken_Terraforming_Compendium_Codec_Illustrated_105.pdf",
+      "sha256": "a8df0d4c2bf090f8ad9fe5fbb99314a292d141eefd77f4b1e3fb235f7ea908f3",
+      "relevant_pages": "2-6"
+    },
+    {
+      "file": "Drakken_Compendium_COMPLETE_105_Archive_and_Source_Guide.md",
+      "sha256": "972f7f9949910545227e44c4097791561bfc30b388b5ba60a8bb17a01925e05d",
+      "relevant_sections": "Catalog counts and classification; corrected timeline; source authority notes"
+    }
+  ],
+  "beats": [
+    {"start": 0, "end": 5, "purpose": "Introduce the source as a catalog for ecological transformation, not a simple creature list.", "claim": "The field protocol says Drakken alter the conditions under which life survives."},
+    {"start": 5, "end": 10, "purpose": "Explain the four non-interchangeable categories that total 105 subjects.", "claim": "58 documented operational strains + 2 genesis entities + 35 unapproved historical proposals + 10 context plates = 105 subjects."},
+    {"start": 10, "end": 15, "purpose": "Show the eight families used to group the 58 operational records.", "claim": "The PDF names eight functional families; family names are listed without assigning extra traits."},
+    {"start": 15, "end": 20, "purpose": "Explain the functional lens through a simple world-system diagram.", "claim": "Functions include crust, atmosphere, biosphere, and civic/institutional change; the compiler frames classification as ecological effect."},
+    {"start": 20, "end": 25, "purpose": "Give the corrected war chronology and containment aftermath.", "claim": "Year 121 Ruby Eclipse at Pharos; Year 170 Aureal Gate and first Starsilk use; Hal'Ven heliocide follows and forms the Siege Wall."},
+    {"start": 25, "end": 30, "purpose": "Close with the evidence and canon boundary.", "claim": "Historical proposals are not approved canon; images do not establish canonical appearance; source compilation is not approval."}
+  ],
+  "rights_and_safety": {
+    "source_art_reused": false,
+    "source_text_used_for_explanation": true,
+    "embedded_production_prompts_executed": false,
+    "cloud_or_api": false,
+    "spend": 0,
+    "voice_or_identity_generation": false,
+    "comfyui": false
+  },
+  "review_state": "TECHNICAL_PASS_HUMAN_ART_REVIEW_PENDING"
+}

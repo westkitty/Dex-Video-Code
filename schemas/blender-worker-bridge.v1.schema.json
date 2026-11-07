@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dex-video-code:blender-worker-bridge.v1",
+  "title": "Bounded Blender worker bridge v1",
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$"},
+    "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["worker_id", "hostname", "platform", "arch", "blender_version", "worker_script_sha256", "policy_version", "observed_at"],
+      "properties": {
+        "worker_id": {"$ref": "#/$defs/id"}, "hostname": {"$ref": "#/$defs/id"},
+        "platform": {"$ref": "#/$defs/id"}, "arch": {"$ref": "#/$defs/id"},
+        "blender_version": {"$ref": "#/$defs/id"}, "worker_script_sha256": {"$ref": "#/$defs/sha256"},
+        "policy_version": {"$ref": "#/$defs/id"}, "observed_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"}
+      }
+    },
+    "baseRequest": {
+      "type": "object", "required": ["schema_version", "request_id", "operation"],
+      "properties": {
+        "schema_version": {"const": "blender-worker-request.v1"},
+        "request_id": {"$ref": "#/$defs/id"},
+        "operation": {"enum": ["health", "submit-approved-job", "status", "read-receipt"]}
+      }
+    },
+    "request": {
+      "oneOf": [
+        {"allOf": [{"$ref": "#/$defs/baseRequest"}, {"type": "object", "additionalProperties": false, "required": ["schema_version", "request_id", "operation"], "properties": {"schema_version": {"const": "blender-worker-request.v1"}, "request_id": {"$ref": "#/$defs/id"}, "operation": {"const": "health"}}}]},
+        {"allOf": [{"$ref": "#/$defs/baseRequest"}, {"type": "object", "additionalProperties": false, "required": ["schema_version", "request_id", "operation", "job_id", "approved_contract_id", "contract_sha256", "render_quality", "frame_start", "frame_end", "director_commit"], "properties": {"schema_version": {"const": "blender-worker-request.v1"}, "request_id": {"$ref": "#/$defs/id"}, "operation": {"const": "submit-approved-job"}, "job_id": {"$ref": "#/$defs/id"}, "approved_contract_id": {"$ref": "#/$defs/id"}, "contract_sha256": {"$ref": "#/$defs/sha256"}, "render_quality": {"enum": ["interaction", "preview"]}, "frame_start": {"type": "integer", "minimum": 1, "maximum": 144}, "frame_end": {"type": "integer", "minimum": 1, "maximum": 144}, "director_commit": {"type": "string", "pattern": "^[a-fA-F0-9]{40}$"}}}]},
+        {"allOf": [{"$ref": "#/$defs/baseRequest"}, {"type": "object", "additionalProperties": false, "required": ["schema_version", "request_id", "operation", "job_id"], "properties": {"schema_version": {"const": "blender-worker-request.v1"}, "request_id": {"$ref": "#/$defs/id"}, "operation": {"enum": ["status", "read-receipt"]}, "job_id": {"$ref": "#/$defs/id"}}}]}
+      ]
+    },
+    "response": {"oneOf": [
+      {"type": "object", "required": ["schema_version", "request_id", "operation", "state", "worker", "admitted"], "properties": {"schema_version": {"const": "blender-worker-response.v1"}, "request_id": {"$ref": "#/$defs/id"}, "operation": {"const": "health"}, "state": {"enum": ["READY", "BLOCKED"]}, "worker": {"$ref": "#/$defs/identity"}, "admitted": {"type": "boolean"}, "reason": {"type": "string", "maxLength": 500}}, "additionalProperties": false},
+      {"type": "object", "required": ["schema_version", "request_id", "operation", "job_id", "state", "worker"], "properties": {"schema_version": {"const": "blender-worker-response.v1"}, "request_id": {"$ref": "#/$defs/id"}, "operation": {"enum": ["submit-approved-job", "status"]}, "job_id": {"$ref": "#/$defs/id"}, "state": {"enum": ["QUEUED", "RUNNING", "SUCCEEDED", "FAILED", "UNCERTAIN_INTERRUPTED"]}, "worker": {"$ref": "#/$defs/identity"}, "reason": {"type": "string", "maxLength": 500}}, "additionalProperties": false},
+      {"type": "object", "required": ["schema_version", "request_id", "operation", "job_id", "state", "worker", "receipt"], "properties": {"schema_version": {"const": "blender-worker-response.v1"}, "request_id": {"$ref": "#/$defs/id"}, "operation": {"const": "read-receipt"}, "job_id": {"$ref": "#/$defs/id"}, "state": {"const": "SUCCEEDED"}, "worker": {"$ref": "#/$defs/identity"}, "receipt": {"$ref": "#/$defs/receipt"}}, "additionalProperties": false}
+    ]},
+    "video": {
+      "type": "object", "additionalProperties": false,
+      "required": ["codec", "width", "height", "fps", "frame_count", "audio", "subtitles"],
+      "properties": {"codec": {"const": "h264"}, "width": {"enum": [320, 640]}, "height": {"enum": [180, 360]}, "fps": {"const": 24}, "frame_count": {"type": "integer", "minimum": 1, "maximum": 48}, "audio": {"const": false}, "subtitles": {"const": false}}
+    },
+    "receipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "job_id", "request_id", "state", "worker", "contract_id", "contract_sha256", "output_relative_path", "output_sha256", "output_bytes", "render_quality", "frame_start", "frame_end", "video", "evidence_scope"],
+      "properties": {
+        "schema_version": {"const": "blender-worker-receipt.v1"}, "job_id": {"$ref": "#/$defs/id"}, "request_id": {"$ref": "#/$defs/id"},
+        "state": {"const": "SUCCEEDED"}, "worker": {"$ref": "#/$defs/identity"}, "contract_id": {"$ref": "#/$defs/id"},
+        "contract_sha256": {"$ref": "#/$defs/sha256"}, "output_relative_path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9._/-]+$"},
+        "output_sha256": {"$ref": "#/$defs/sha256"}, "output_bytes": {"type": "integer", "minimum": 1},
+        "render_quality": {"enum": ["interaction", "preview"]}, "frame_start": {"type": "integer", "minimum": 1, "maximum": 144},
+        "frame_end": {"type": "integer", "minimum": 1, "maximum": 144}, "video": {"$ref": "#/$defs/video"},
+        "evidence_scope": {"const": "WORKER_RECEIPT_REQUIRES_DIRECTOR_READBACK"}
+      }
+    }
+  },
+  "oneOf": [{"$ref": "#/$defs/request"}, {"$ref": "#/$defs/response"}]
+}

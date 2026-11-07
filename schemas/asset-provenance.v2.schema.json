@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dex-video-code:asset-provenance.v2",
+  "title": "Asset provenance manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "assets"],
+  "properties": {
+    "schema_version": {"const": "asset-provenance.v2"},
+    "assets": {"type": "array", "items": {"$ref": "#/$defs/asset"}}
+  },
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset_id", "path", "sha256", "source", "source_revision", "license", "rights_status", "rights_basis", "consent_status", "allowed_uses", "category", "approval", "dependency_ids", "transformations"],
+      "properties": {
+        "asset_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$"},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+        "source": {"type": "string", "minLength": 1},
+        "source_revision": {"type": "string", "minLength": 1},
+        "license": {"type": "string", "minLength": 1},
+        "rights_status": {"enum": ["USER_ASSERTED_VERIFIED", "UNVERIFIED", "BLOCKED"]},
+        "rights_basis": {"type": "string", "minLength": 1},
+        "consent_status": {"enum": ["user_asserted_verified", "not_required", "unknown"]},
+        "allowed_uses": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "attribution": {"type": "string"},
+        "category": {"enum": ["approved_reference", "experimental", "rejected"]},
+        "approval": {"$ref": "#/$defs/approval"},
+        "dependency_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "continuity_group": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$"},
+        "transformations": {"type": "array", "items": {"$ref": "#/$defs/transformation"}}
+      }
+    },
+    "approval": {
+      "type": "object", "additionalProperties": false,
+      "required": ["event_id", "state", "actor", "recorded_at", "allowed_uses"],
+      "properties": {
+        "event_id": {"type": "string", "pattern": "^[-A-Za-z0-9._]{1,100}$"},
+        "state": {"enum": ["APPROVED", "REJECTED", "SUPERSEDED"]},
+        "actor": {"const": "USER_ASSERTED"},
+        "recorded_at": {"type": "string", "format": "date-time"},
+        "allowed_uses": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "supersedes_event_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "transformation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tool", "version", "parameters_sha256", "input_sha256", "output_sha256", "output_path"],
+      "properties": {
+        "tool": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1},
+        "parameters_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+        "input_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+        "output_sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+        "output_path": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

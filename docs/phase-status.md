@@ -1,22 +1,19 @@
-# Implementation phase status
+# Studio V2 phase status
 
-Status refreshed 2026-11-07 America/Detroit. This is a restart aid; use `OPERATIONAL_STATE.md` for the latest Studio V2 evidence and rediscover machine state before execution.
+Updated 2026-11-07 America/Detroit from current repository source and dated operational evidence. `OPERATIONAL_STATE.md` contains the detailed receipts and limitations. Status reflects the whole phase, not merely the latest code change.
 
-| Phase | State | Evidence / remaining gate |
+| Phase | State | Verified scope and remaining gate |
 |---|---|---|
-| 00 — Baseline | PARTIAL | See `capability-baseline.md`. Relevant read-only route inventory exists; full portfolio and rights inventory is not complete. |
-| 00B — Repository and Project handoff | COMPLETE for source delivery | Public `westkitty/Dex-Video-Code` exists, has bridge/setup/instruction/bootstrap files, and its source publication was verified. User-side Project settings remain pending. |
-| 01 — Job contract | PARTIAL | Versioned v1.1 JSON Schema, v1 migration and 23 tests exist. A complete portable manifest round-trip and full signed-plan/provenance contract are not demonstrated. |
-| 02 — Capability registry | PARTIAL | Local geometric adapter is tested; a historical HyperFrames controller exists, but its operations are not exposed by the fresh DEX tool inventory. `director` does not dispatch to it. |
-| 03 — Creative direction | PARTIAL | Deterministic parsing and unsupported-route blocking are tested. Rich treatments, scored alternatives and a human-approved shot map are not generally complete. |
-| 04 — Asset handoff | BLOCKED | No read-only asset import/provenance subsystem is complete. DexDiffusion currently reports `UNTRUSTED_BACKEND_IDENTITY`; no supplied artwork was present. |
-| 05 — Motion design Pilot A | PARTIAL | Delivery job `hf-20261105t033807-a3ce89e8` completed after one repair. Local output `media/pilot-a/pilot-a-20s.mp4` is H.264, 20s, 960×540/24fps, silent and subtitle-free; full decode, local/remote hash match and encoded-frame spot-check passed. Explicit human artistic review remains pending. Receipt: `media/pilot-a/receipt.json`. |
-| 06 — Illustrated/hybrid Pilot B | BLOCKED | Requires an authorized art source and live renderer route; neither is proven at this snapshot. |
-| 07 — Specialist routes | PARTIAL | Explicit 3D requests are gated and fixture-tested. Blender, VFX capture, performance capture and 2D rig adapters are not integrated/proven here. |
-| 08 — Sound and assembly | PARTIAL | Pilot A is intentionally silent and has no audio stream. General audio workers and mixing remain unverified; do not add audio without a brief. |
-| 09 — Verify/package/three pilots | PARTIAL | Media verifier and `pack` exist. Three distinct completed route pilots and artistic reviews are absent. |
-| 10 — Publication/Project activation | PARTIAL | Existing public source history is published. New pilot/source changes still require review and push; Project settings are user-managed and remain pending. |
+| P0 — Baseline and security | PARTIAL | Repository and capability evidence are recorded. Full rights/asset portfolio audit and a complete threat review remain open. |
+| P1 — Master delivery | PARTIAL | Google OAuth/Drive adapter and extensive mocked retry/privacy/integrity tests exist. No current live authenticated upload/readback receipt is recorded. |
+| P2 — Geometric morph | PARTIAL | Continuous contour implementation and regression checks exist. Consult dated film evidence for exact encoded-output status; human acceptance remains separate. |
+| P3 — Live capability routing | PARTIAL | Registry and local routes are present. No callable typed HyperFrames or Blender operation is exposed to the Director; no remote route is admitted. |
+| P4 — Creative direction and visual QA | PARTIAL | Typed contract and encoded sample extraction exist. General authored story direction, automated defect detection and independent visual review remain incomplete. |
+| P5 — Original commercial film | PARTIAL | An authored 24-second product film has technical and encoded-frame checks; no human artistic acceptance or live private delivery is recorded. |
+| P6 — Asset provenance | PARTIAL | v1 local hash checks and v2 source/license, user-asserted approval, dependency, continuity and transformation-byte checks exist. No actual user asset was supplied; rights and production admission remain unverified. |
+| P7 — Articulated character performance | PARTIAL | Standalone Sentinel performance and a verified local master exist. The Director cannot dispatch/reconcile it; no general multi-character or combat route is proven. Film C remains gated. |
+| P8 — Benchmarks and studio workflow | PARTIAL | Status/receipt foundations exist. No blind comparable benchmark, measured operator-friction result or completed three-film acceptance set is recorded. |
 
-## Resume point
+## Current continuation point
 
-Historical media outputs are preserved in local ignored paths. Human review and Project setup remain separate gates. Read the latest operational state and rediscover machine identity and capacity before using DEX//REACH.
+P6 provenance foundation was extended and its 77-test suite passed in the 2026-11-07 continuation. P7.4 Director-to-worker operation remains blocked because the current bridge exposes generic process tools but no Director-callable typed worker API or signed job reconciliation contract. No render, media transfer, Drive upload or artistic approval was performed in that milestone. Continue only from the latest entry in `OPERATIONAL_STATE.md` and rediscover node identity, access and resource admission before remote work.

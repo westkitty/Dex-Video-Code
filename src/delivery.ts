@@ -40,16 +40,16 @@ function validId(v:string|undefined,label:string):string { if(!v||!/^[A-Za-z0-9_
 function safeName(v:string):string { const s=path.basename(v).replace(/[^A-Za-z0-9._-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,100);return (s||"video").replace(/\.mp4$/i,""); }
 function responseJson<T>(r:Response):Promise<T>{return r.json() as Promise<T>;}
 
-export interface DriveConfig { accessToken:string; folderId:string; }
+export interface DriveConfig { accessToken:string|(()=>Promise<string>); folderId:string; invalidateAccessToken?:()=>void; }
 export class GoogleDriveDeliveryAdapter {
   constructor(private readonly config:DriveConfig,private readonly fetcher:FetchLike=fetch,private readonly pause=(ms:number)=>new Promise<void>(r=>setTimeout(r,ms))) {
-    if(!config.accessToken)throw new DeliveryError("Google Drive authorization is not configured (DEX_DRIVE_ACCESS_TOKEN).","BLOCKED_AUTH");
     validId(config.folderId,"DEX_DRIVE_FOLDER_ID");
   }
-  private headers(extra:Record<string,string>={}):HeadersInit{return {Authorization:`Bearer ${this.config.accessToken}`,...extra};}
+  private async headers(extra:Record<string,string>={}):Promise<HeadersInit>{const token=typeof this.config.accessToken==="string"?this.config.accessToken:await this.config.accessToken();if(!token)throw new DeliveryError("Google Drive authorization is not configured.","BLOCKED_AUTH");return {Authorization:`Bearer ${token}`,...extra};}
   private async request(url:string,init:RequestInit,retryNetwork=true):Promise<Response>{
     for(let attempt=0;;attempt++){
       let r:Response;try{r=await this.fetcher(url,init);}catch{if(!retryNetwork||attempt>=3)throw new DeliveryError("Google Drive connection failed; delivery can be retried safely.","RETRYABLE");await this.pause(250*2**attempt);continue;}
+      if(r.status===401&&typeof this.config.accessToken==="function"&&attempt===0){this.config.invalidateAccessToken?.();const headers=new Headers(init.headers);headers.set("Authorization",`Bearer ${await this.config.accessToken()}`);init={...init,headers};continue;}
       if(RETRYABLE.has(r.status)&&attempt<3){await this.pause(250*2**attempt);continue;}
       if(r.status===403){try{await fail(r);}catch(e){if(e instanceof DeliveryError&&e.state==="RETRYABLE"&&attempt<3){await this.pause(250*2**attempt);continue;}throw e;}}
       if(!r.ok&&r.status!==308)await fail(r);return r;
@@ -57,12 +57,12 @@ export class GoogleDriveDeliveryAdapter {
   }
   private async getFile(fileId:string):Promise<DriveFile>{
     const u=`${API}/files/${encodeURIComponent(fileId)}?fields=${encodeURIComponent(FIELDS)}`;
-    return responseJson<DriveFile>(await this.request(u,{headers:this.headers()}));
+    return responseJson<DriveFile>(await this.request(u,{headers:await this.headers()}));
   }
   private async findByKey(key:string):Promise<DriveFile|undefined>{
     const q=`'${this.config.folderId}' in parents and appProperties has { key='dexDeliveryKey' and value='${key}' } and trashed=false`;
     const u=`${API}/files?${new URLSearchParams({q,fields:`files(${FIELDS})`,pageSize:"10",supportsAllDrives:"true",includeItemsFromAllDrives:"true"})}`;
-    const result=await responseJson<{files?:DriveFile[]}>(await this.request(u,{headers:this.headers()}));
+    const result=await responseJson<{files?:DriveFile[]}>(await this.request(u,{headers:await this.headers()}));
     if((result.files?.length??0)>1)throw new DeliveryError("Multiple Drive files carry this delivery key; refusing to choose or duplicate.","FAILED");return result.files?.[0];
   }
   private async ensurePrivateFolder():Promise<void>{
@@ -82,7 +82,7 @@ export class GoogleDriveDeliveryAdapter {
   }
   private async uploadResumable(filePath:string,bytes:number,name:string,key:string):Promise<DriveFile>{
     const metadata={name,mimeType:"video/mp4",parents:[this.config.folderId],appProperties:{dexDeliveryKey:key}};
-    const init=await this.request(`${UPLOAD}/files?uploadType=resumable&fields=${encodeURIComponent(FIELDS)}`,{method:"POST",headers:this.headers({"Content-Type":"application/json; charset=UTF-8","X-Upload-Content-Type":"video/mp4","X-Upload-Content-Length":String(bytes)}),body:JSON.stringify(metadata)});
+    const init=await this.request(`${UPLOAD}/files?uploadType=resumable&fields=${encodeURIComponent(FIELDS)}`,{method:"POST",headers:await this.headers({"Content-Type":"application/json; charset=UTF-8","X-Upload-Content-Type":"video/mp4","X-Upload-Content-Length":String(bytes)}),body:JSON.stringify(metadata)});
     const loc=init.headers.get("location");if(!loc)throw new DeliveryError("Drive omitted the resumable upload session; no upload was confirmed.","RETRYABLE");
     let session:URL;try{session=new URL(loc);}catch{throw new DeliveryError("Drive returned an invalid resumable session; upload stopped.","FAILED");}
     if(session.protocol!=="https:"||!session.hostname.endsWith(".googleapis.com"))throw new DeliveryError("Drive returned an unexpected upload host; upload stopped.","FAILED");

@@ -1,0 +1,2808 @@
+{
+  "schema_version": "authored-motion.v1",
+  "title": "The Impossible Product — The Aperture",
+  "duration_seconds": 24,
+  "width": 1280,
+  "height": 720,
+  "fps": 24,
+  "background": "#05090e",
+  "visual_sample_times": [
+    0.5,
+    3.5,
+    4.5,
+    7.5,
+    9.5,
+    12,
+    14.5,
+    15.5,
+    17.5,
+    20,
+    22,
+    23.75
+  ],
+  "beats": [
+    {
+      "id": "silhouette",
+      "start": 0,
+      "end": 4,
+      "purpose": "Reveal one closed precision object with a restrained moving beam.",
+      "visual_state": "The same dark circular instrument resolves from near-black silhouette."
+    },
+    {
+      "id": "approach",
+      "start": 4,
+      "end": 9,
+      "purpose": "Move closer as machined rings and fasteners become legible.",
+      "visual_state": "The closed Aperture fills more of frame; its casing and nested mechanism remain aligned."
+    },
+    {
+      "id": "preload",
+      "start": 9,
+      "end": 15,
+      "purpose": "Release linked retainers and rotate the iris assembly in a readable sequence.",
+      "visual_state": "Four radial slides retract as six attached iris leaves begin to travel outward."
+    },
+    {
+      "id": "aperture",
+      "start": 15,
+      "end": 20,
+      "purpose": "Open the central iris and reveal the concealed turquoise core.",
+      "visual_state": "The same six leaves expose the luminous central lens while the outer chassis stays fixed."
+    },
+    {
+      "id": "hero",
+      "start": 20,
+      "end": 24,
+      "purpose": "Settle camera and light on the transformed product for a clean hero hold.",
+      "visual_state": "The fully opened Aperture holds in one composed frame without text or extra objects."
+    }
+  ],
+  "groups": [
+    {
+      "id": "product",
+      "x": 640,
+      "y": 362
+    },
+    {
+      "id": "rotor",
+      "parent_group_id": "product"
+    },
+    {
+      "id": "core",
+      "parent_group_id": "product"
+    },
+    {
+      "id": "iris-1",
+      "parent_group_id": "rotor"
+    },
+    {
+      "id": "iris-2",
+      "parent_group_id": "rotor"
+    },
+    {
+      "id": "iris-3",
+      "parent_group_id": "rotor"
+    },
+    {
+      "id": "iris-4",
+      "parent_group_id": "rotor"
+    },
+    {
+      "id": "iris-5",
+      "parent_group_id": "rotor"
+    },
+    {
+      "id": "iris-6",
+      "parent_group_id": "rotor"
+    },
+    {
+      "id": "slide-1",
+      "parent_group_id": "product",
+      "x": 0,
+      "y": -123
+    },
+    {
+      "id": "slide-2",
+      "parent_group_id": "product",
+      "x": 123,
+      "y": 0
+    },
+    {
+      "id": "slide-3",
+      "parent_group_id": "product",
+      "x": 0,
+      "y": 123
+    },
+    {
+      "id": "slide-4",
+      "parent_group_id": "product",
+      "x": -123,
+      "y": 0
+    }
+  ],
+  "elements": [
+    {
+      "id": "floor-shadow",
+      "layer": 0,
+      "geometry": "rect",
+      "x": 640,
+      "y": 566,
+      "width": 440,
+      "height": 54,
+      "corner_radius": 27,
+      "fill": "#010204",
+      "fill_opacity": 0.72
+    },
+    {
+      "id": "floor-reflection",
+      "layer": 1,
+      "geometry": "rect",
+      "x": 640,
+      "y": 552,
+      "width": 300,
+      "height": 14,
+      "corner_radius": 7,
+      "fill": "#31515a",
+      "fill_opacity": 0.18
+    },
+    {
+      "id": "light-shaft",
+      "layer": 2,
+      "geometry": "path",
+      "path": "M 470 -30 L 810 -30 L 722 234 Q 640 265 558 234 Z",
+      "fill": "#c5f0e6",
+      "fill_opacity": 0.22
+    },
+    {
+      "id": "outer-case",
+      "layer": 10,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 188,
+      "fill": "#101820",
+      "stroke": "#58666c",
+      "stroke_width": 2,
+      "material": "dark-metal"
+    },
+    {
+      "id": "outer-bevel",
+      "layer": 11,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 180,
+      "fill": "none",
+      "stroke": "#bec9c8",
+      "stroke_width": 1.6,
+      "stroke_opacity": 0.56
+    },
+    {
+      "id": "machined-rim",
+      "layer": 12,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 169,
+      "fill": "none",
+      "stroke": "#65757c",
+      "stroke_width": 7,
+      "stroke_opacity": 0.83
+    },
+    {
+      "id": "rim-inset",
+      "layer": 13,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 160,
+      "fill": "none",
+      "stroke": "#141d23",
+      "stroke_width": 8,
+      "stroke_opacity": 0.96
+    },
+    {
+      "id": "rear-housing",
+      "layer": 14,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 153,
+      "fill": "#080d12",
+      "stroke": "#39474e",
+      "stroke_width": 2,
+      "material": "dark-metal"
+    },
+    {
+      "id": "inner-lathe",
+      "layer": 15,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 137,
+      "fill": "none",
+      "stroke": "#75858a",
+      "stroke_width": 1,
+      "stroke_opacity": 0.52
+    },
+    {
+      "id": "iris-seat",
+      "layer": 16,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 126,
+      "fill": "#10171d",
+      "stroke": "#63747b",
+      "stroke_width": 4,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "seat-shadow",
+      "layer": 17,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 116,
+      "fill": "#03070a",
+      "stroke": "#0c1419",
+      "stroke_width": 4
+    },
+    {
+      "id": "iris-recess",
+      "layer": 18,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "radius": 107,
+      "fill": "#030609",
+      "stroke": "#1e2c32",
+      "stroke_width": 2
+    },
+    {
+      "id": "rotor-bearing",
+      "layer": 19,
+      "geometry": "circle",
+      "parent_group_id": "rotor",
+      "radius": 99,
+      "fill": "none",
+      "stroke": "#405057",
+      "stroke_width": 2,
+      "stroke_opacity": 0.82
+    },
+    {
+      "id": "bearing-highlight",
+      "layer": 20,
+      "geometry": "circle",
+      "parent_group_id": "rotor",
+      "radius": 94,
+      "fill": "none",
+      "stroke": "#a9b5b6",
+      "stroke_width": 1,
+      "stroke_opacity": 0.32
+    },
+    {
+      "id": "index-cut-1",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M -3.00 0.00 L 3.00 0.00",
+      "x": 174,
+      "y": 0,
+      "fill": "none",
+      "stroke": "#bdc9c9",
+      "stroke_width": 2,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "index-cut-2",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M -1.06 -1.06 L 1.06 1.06",
+      "x": 121.98,
+      "y": 121.98,
+      "fill": "none",
+      "stroke": "#63737a",
+      "stroke_width": 1,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "index-cut-3",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M -0.00 -3.00 L 0.00 3.00",
+      "x": 0,
+      "y": 174,
+      "fill": "none",
+      "stroke": "#bdc9c9",
+      "stroke_width": 2,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "index-cut-4",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M 1.06 -1.06 L -1.06 1.06",
+      "x": -121.98,
+      "y": 121.98,
+      "fill": "none",
+      "stroke": "#63737a",
+      "stroke_width": 1,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "index-cut-5",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M 3.00 -0.00 L -3.00 0.00",
+      "x": -174,
+      "y": 0,
+      "fill": "none",
+      "stroke": "#bdc9c9",
+      "stroke_width": 2,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "index-cut-6",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M 1.06 1.06 L -1.06 -1.06",
+      "x": -121.98,
+      "y": -121.98,
+      "fill": "none",
+      "stroke": "#63737a",
+      "stroke_width": 1,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "index-cut-7",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M 0.00 3.00 L -0.00 -3.00",
+      "x": 0,
+      "y": -174,
+      "fill": "none",
+      "stroke": "#bdc9c9",
+      "stroke_width": 2,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "index-cut-8",
+      "layer": 22,
+      "geometry": "path",
+      "parent_group_id": "product",
+      "path": "M -1.06 1.06 L 1.06 -1.06",
+      "x": 121.98,
+      "y": -121.98,
+      "fill": "none",
+      "stroke": "#63737a",
+      "stroke_width": 1,
+      "stroke_opacity": 0.64
+    },
+    {
+      "id": "case-fastener-1",
+      "layer": 23,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "x": 103.24,
+      "y": 103.24,
+      "radius": 5,
+      "fill": "#19232a",
+      "stroke": "#a0adaf",
+      "stroke_width": 1.1,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "case-fastener-2",
+      "layer": 23,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "x": -103.24,
+      "y": 103.24,
+      "radius": 5,
+      "fill": "#19232a",
+      "stroke": "#a0adaf",
+      "stroke_width": 1.1,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "case-fastener-3",
+      "layer": 23,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "x": -103.24,
+      "y": -103.24,
+      "radius": 5,
+      "fill": "#19232a",
+      "stroke": "#a0adaf",
+      "stroke_width": 1.1,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "case-fastener-4",
+      "layer": 23,
+      "geometry": "circle",
+      "parent_group_id": "product",
+      "x": 103.24,
+      "y": -103.24,
+      "radius": 5,
+      "fill": "#19232a",
+      "stroke": "#a0adaf",
+      "stroke_width": 1.1,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "slide-carriage-1",
+      "layer": 30,
+      "geometry": "rect",
+      "parent_group_id": "slide-1",
+      "x": 0,
+      "y": 0,
+      "width": 17,
+      "height": 17,
+      "corner_radius": 5,
+      "fill": "#1a252c",
+      "stroke": "#7e8d91",
+      "stroke_width": 1.5,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "slide-pin-1",
+      "layer": 31,
+      "geometry": "circle",
+      "parent_group_id": "slide-1",
+      "x": 0,
+      "y": 0,
+      "radius": 3,
+      "fill": "#d3dedb",
+      "stroke": "#68777b",
+      "stroke_width": 1
+    },
+    {
+      "id": "slide-carriage-2",
+      "layer": 30,
+      "geometry": "rect",
+      "parent_group_id": "slide-2",
+      "x": 0,
+      "y": 0,
+      "width": 43,
+      "height": 43,
+      "corner_radius": 5,
+      "fill": "#1a252c",
+      "stroke": "#7e8d91",
+      "stroke_width": 1.5,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "slide-pin-2",
+      "layer": 31,
+      "geometry": "circle",
+      "parent_group_id": "slide-2",
+      "x": 0,
+      "y": 0,
+      "radius": 3,
+      "fill": "#d3dedb",
+      "stroke": "#68777b",
+      "stroke_width": 1
+    },
+    {
+      "id": "slide-carriage-3",
+      "layer": 30,
+      "geometry": "rect",
+      "parent_group_id": "slide-3",
+      "x": 0,
+      "y": 0,
+      "width": 17,
+      "height": 17,
+      "corner_radius": 5,
+      "fill": "#1a252c",
+      "stroke": "#7e8d91",
+      "stroke_width": 1.5,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "slide-pin-3",
+      "layer": 31,
+      "geometry": "circle",
+      "parent_group_id": "slide-3",
+      "x": 0,
+      "y": 0,
+      "radius": 3,
+      "fill": "#d3dedb",
+      "stroke": "#68777b",
+      "stroke_width": 1
+    },
+    {
+      "id": "slide-carriage-4",
+      "layer": 30,
+      "geometry": "rect",
+      "parent_group_id": "slide-4",
+      "x": 0,
+      "y": 0,
+      "width": 43,
+      "height": 43,
+      "corner_radius": 5,
+      "fill": "#1a252c",
+      "stroke": "#7e8d91",
+      "stroke_width": 1.5,
+      "material": "brushed-metal"
+    },
+    {
+      "id": "slide-pin-4",
+      "layer": 31,
+      "geometry": "circle",
+      "parent_group_id": "slide-4",
+      "x": 0,
+      "y": 0,
+      "radius": 3,
+      "fill": "#d3dedb",
+      "stroke": "#68777b",
+      "stroke_width": 1
+    },
+    {
+      "id": "iris-leaf-1",
+      "layer": 40,
+      "geometry": "path",
+      "parent_group_id": "iris-1",
+      "path": "M 32 -12 C 58 -57 96 -84 126 -86 Q 120 -62 132 -43 C 98 -34 72 -10 46 20 Z",
+      "fill": "#172128",
+      "stroke": "#829196",
+      "stroke_width": 1.7,
+      "material": "dark-metal"
+    },
+    {
+      "id": "iris-leaf-2",
+      "layer": 40,
+      "geometry": "path",
+      "parent_group_id": "iris-2",
+      "path": "M 32 -12 C 58 -57 96 -84 126 -86 Q 120 -62 132 -43 C 98 -34 72 -10 46 20 Z",
+      "fill": "#172128",
+      "stroke": "#829196",
+      "stroke_width": 1.7,
+      "material": "dark-metal"
+    },
+    {
+      "id": "iris-leaf-3",
+      "layer": 40,
+      "geometry": "path",
+      "parent_group_id": "iris-3",
+      "path": "M 32 -12 C 58 -57 96 -84 126 -86 Q 120 -62 132 -43 C 98 -34 72 -10 46 20 Z",
+      "fill": "#172128",
+      "stroke": "#829196",
+      "stroke_width": 1.7,
+      "material": "dark-metal"
+    },
+    {
+      "id": "iris-leaf-4",
+      "layer": 40,
+      "geometry": "path",
+      "parent_group_id": "iris-4",
+      "path": "M 32 -12 C 58 -57 96 -84 126 -86 Q 120 -62 132 -43 C 98 -34 72 -10 46 20 Z",
+      "fill": "#172128",
+      "stroke": "#829196",
+      "stroke_width": 1.7,
+      "material": "dark-metal"
+    },
+    {
+      "id": "iris-leaf-5",
+      "layer": 40,
+      "geometry": "path",
+      "parent_group_id": "iris-5",
+      "path": "M 32 -12 C 58 -57 96 -84 126 -86 Q 120 -62 132 -43 C 98 -34 72 -10 46 20 Z",
+      "fill": "#172128",
+      "stroke": "#829196",
+      "stroke_width": 1.7,
+      "material": "dark-metal"
+    },
+    {
+      "id": "iris-leaf-6",
+      "layer": 40,
+      "geometry": "path",
+      "parent_group_id": "iris-6",
+      "path": "M 32 -12 C 58 -57 96 -84 126 -86 Q 120 -62 132 -43 C 98 -34 72 -10 46 20 Z",
+      "fill": "#172128",
+      "stroke": "#829196",
+      "stroke_width": 1.7,
+      "material": "dark-metal"
+    },
+    {
+      "id": "core-well",
+      "layer": 45,
+      "geometry": "circle",
+      "parent_group_id": "core",
+      "radius": 47,
+      "fill": "#081419",
+      "stroke": "#53686d",
+      "stroke_width": 2,
+      "material": "glass"
+    },
+    {
+      "id": "core-ring",
+      "layer": 46,
+      "geometry": "circle",
+      "parent_group_id": "core",
+      "radius": 35,
+      "fill": "none",
+      "stroke": "#4dbeb1",
+      "stroke_width": 2,
+      "stroke_opacity": 0.8
+    },
+    {
+      "id": "core-lens",
+      "layer": 47,
+      "geometry": "circle",
+      "parent_group_id": "core",
+      "radius": 26,
+      "fill": "#081a1e",
+      "stroke": "#b0fff0",
+      "stroke_width": 1.5,
+      "material": "emissive",
+      "glow": true
+    },
+    {
+      "id": "core-aperture",
+      "layer": 48,
+      "geometry": "circle",
+      "parent_group_id": "core",
+      "radius": 8,
+      "fill": "#e7fff3",
+      "stroke": "#c2fff2",
+      "stroke_width": 1,
+      "material": "emissive",
+      "glow": true
+    }
+  ],
+  "tracks": [
+    {
+      "element_id": "floor-shadow",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.18,
+          "reveal": 1
+        },
+        {
+          "at": 2.7,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.42,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.5,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.45,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.45,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "floor-reflection",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0,
+          "reveal": 1
+        },
+        {
+          "at": 5,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.1,
+          "reveal": 1
+        },
+        {
+          "at": 16,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.18,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.12,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.12,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "light-shaft",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0,
+          "reveal": 1
+        },
+        {
+          "at": 1.8,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.22,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.14,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.055,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.025,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.018,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.018,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "outer-case",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.44,
+          "reveal": 1
+        },
+        {
+          "at": 3,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.82,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "outer-bevel",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "machined-rim",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "rim-inset",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "rear-housing",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "inner-lathe",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-seat",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "seat-shadow",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-recess",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "rotor-bearing",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "bearing-highlight",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-1",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-2",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-3",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-4",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-5",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-6",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-7",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "index-cut-8",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "case-fastener-1",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "case-fastener-2",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "case-fastener-3",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "case-fastener-4",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-carriage-1",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-pin-1",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-carriage-2",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-pin-2",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-carriage-3",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-pin-3",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-carriage-4",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "slide-pin-4",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-leaf-1",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-leaf-2",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-leaf-3",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-leaf-4",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-leaf-5",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "iris-leaf-6",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "core-well",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "core-ring",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "core-lens",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "element_id": "core-aperture",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    }
+  ],
+  "group_tracks": [
+    {
+      "group_id": "slide-1",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.4,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 12,
+          "x": 0,
+          "y": -5,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 0,
+          "y": -15,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.94,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": 0,
+          "y": -14,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.86,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": -14,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.82,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": -14,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.82,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "slide-2",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 0.4,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 12,
+          "x": 5,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 15,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 0.94,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": 14,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 0.86,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 14,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 0.82,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 14,
+          "y": 0,
+          "scale": 1,
+          "rotation": 90,
+          "opacity": 0.82,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "slide-3",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 0.4,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 12,
+          "x": 0,
+          "y": 5,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 0,
+          "y": 15,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 0.94,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": 0,
+          "y": 14,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 0.86,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": 14,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 0.82,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 14,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 0.82,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "slide-4",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 0.4,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 12,
+          "x": -5,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": -15,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 0.94,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": -14,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 0.86,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": -14,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 0.82,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": -14,
+          "y": 0,
+          "scale": 1,
+          "rotation": 270,
+          "opacity": 0.82,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "iris-1",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.62,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9.05,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 12.8,
+          "x": 32,
+          "y": 0,
+          "scale": 1,
+          "rotation": -20,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 32,
+          "y": 0,
+          "scale": 1,
+          "rotation": -20,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": 32,
+          "y": 0,
+          "scale": 1,
+          "rotation": -20,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 32,
+          "y": 0,
+          "scale": 1,
+          "rotation": -20,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "iris-2",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 60,
+          "opacity": 0.62,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 60,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 60,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9.5,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 60,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 13.120000000000001,
+          "x": 16.000000000000004,
+          "y": 27.712812921102035,
+          "scale": 1,
+          "rotation": 80,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 16.000000000000004,
+          "y": 27.712812921102035,
+          "scale": 1,
+          "rotation": 80,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": 16.000000000000004,
+          "y": 27.712812921102035,
+          "scale": 1,
+          "rotation": 80,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 16.000000000000004,
+          "y": 27.712812921102035,
+          "scale": 1,
+          "rotation": 80,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "iris-3",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 120,
+          "opacity": 0.62,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 120,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 120,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9.950000000000001,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 120,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 13.440000000000001,
+          "x": -15.999999999999993,
+          "y": 27.71281292110204,
+          "scale": 1,
+          "rotation": 100,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": -15.999999999999993,
+          "y": 27.71281292110204,
+          "scale": 1,
+          "rotation": 100,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": -15.999999999999993,
+          "y": 27.71281292110204,
+          "scale": 1,
+          "rotation": 100,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": -15.999999999999993,
+          "y": 27.71281292110204,
+          "scale": 1,
+          "rotation": 100,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "iris-4",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 0.62,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 10.4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 180,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 13.760000000000002,
+          "x": -32,
+          "y": 3.91886975727153e-15,
+          "scale": 1,
+          "rotation": 200,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": -32,
+          "y": 3.91886975727153e-15,
+          "scale": 1,
+          "rotation": 200,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": -32,
+          "y": 3.91886975727153e-15,
+          "scale": 1,
+          "rotation": 200,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": -32,
+          "y": 3.91886975727153e-15,
+          "scale": 1,
+          "rotation": 200,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "iris-5",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 240,
+          "opacity": 0.62,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 240,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 240,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 10.850000000000001,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 240,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 14.08,
+          "x": -16.000000000000014,
+          "y": -27.71281292110203,
+          "scale": 1,
+          "rotation": 220,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": -16.000000000000014,
+          "y": -27.71281292110203,
+          "scale": 1,
+          "rotation": 220,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": -16.000000000000014,
+          "y": -27.71281292110203,
+          "scale": 1,
+          "rotation": 220,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": -16.000000000000014,
+          "y": -27.71281292110203,
+          "scale": 1,
+          "rotation": 220,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "iris-6",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 300,
+          "opacity": 0.62,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 300,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 300,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 11.3,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 300,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 14.4,
+          "x": 16.000000000000004,
+          "y": -27.712812921102035,
+          "scale": 1,
+          "rotation": 320,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 16.000000000000004,
+          "y": -27.712812921102035,
+          "scale": 1,
+          "rotation": 320,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 19,
+          "x": 16.000000000000004,
+          "y": -27.712812921102035,
+          "scale": 1,
+          "rotation": 320,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 16.000000000000004,
+          "y": -27.712812921102035,
+          "scale": 1,
+          "rotation": 320,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "core",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 0.82,
+          "rotation": 0,
+          "opacity": 0.16,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 0.9,
+          "rotation": 0,
+          "opacity": 0.2,
+          "reveal": 1
+        },
+        {
+          "at": 14.5,
+          "x": 0,
+          "y": 0,
+          "scale": 0.94,
+          "rotation": 0,
+          "opacity": 0.3,
+          "reveal": 1
+        },
+        {
+          "at": 17.5,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.92,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.94,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 0.94,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "product",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 0.96,
+          "rotation": 0,
+          "opacity": 0.26,
+          "reveal": 1
+        },
+        {
+          "at": 2.6,
+          "x": 0,
+          "y": 0,
+          "scale": 0.98,
+          "rotation": 0,
+          "opacity": 0.7,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1.09,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 0,
+          "y": 0,
+          "scale": 1.07,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": 0,
+          "scale": 1.04,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1.04,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    },
+    {
+      "group_id": "rotor",
+      "keyframes": [
+        {
+          "at": 0,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": -2,
+          "opacity": 0.8,
+          "reveal": 1
+        },
+        {
+          "at": 4,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 9,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 3,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 15,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 12,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 20,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 14,
+          "opacity": 1,
+          "reveal": 1
+        },
+        {
+          "at": 24,
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "rotation": 14,
+          "opacity": 1,
+          "reveal": 1
+        }
+      ]
+    }
+  ],
+  "camera": {
+    "keyframes": [
+      {
+        "at": 0,
+        "x": 0,
+        "y": 3,
+        "scale": 1.03,
+        "rotation": 0,
+        "opacity": 1,
+        "reveal": 1
+      },
+      {
+        "at": 4,
+        "x": 0,
+        "y": 0,
+        "scale": 1.03,
+        "rotation": 0,
+        "opacity": 1,
+        "reveal": 1
+      },
+      {
+        "at": 9,
+        "x": 0,
+        "y": 0,
+        "scale": 1.24,
+        "rotation": 0,
+        "opacity": 1,
+        "reveal": 1
+      },
+      {
+        "at": 13,
+        "x": 0,
+        "y": -2,
+        "scale": 1.26,
+        "rotation": 0,
+        "opacity": 1,
+        "reveal": 1
+      },
+      {
+        "at": 17.5,
+        "x": 0,
+        "y": 0,
+        "scale": 1.28,
+        "rotation": 0,
+        "opacity": 1,
+        "reveal": 1
+      },
+      {
+        "at": 20,
+        "x": 0,
+        "y": 1,
+        "scale": 1.3,
+        "rotation": 0,
+        "opacity": 1,
+        "reveal": 1
+      },
+      {
+        "at": 24,
+        "x": 0,
+        "y": 1,
+        "scale": 1.3,
+        "rotation": 0,
+        "opacity": 1,
+        "reveal": 1
+      }
+    ]
+  }
+}

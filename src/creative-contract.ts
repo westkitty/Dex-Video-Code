@@ -6,7 +6,7 @@ export interface CreativeContract {
   job_id:string;
   source_prompt:string;
   admission:{state:CreativeJob["route_decision"]["status"];route:string;reason:string};
-  subject:{description:string;identity:"ONE_CONTINUOUS_OBJECT"|"UNSPECIFIED";actions:string[]};
+  subject:{description:string;identity:"ONE_CONTINUOUS_OBJECT"|"SAME_AUTHORED_PRODUCT"|"UNSPECIFIED";actions:string[]};
   temporal_contract:Array<{stage:ContractStage;start_seconds:number;end_seconds:number;purpose:string;visual_state:string}>;
   source_beats:CreativeJob["shots_or_beats"];
   camera:{motion:"FIXED"|"AUTHORED_TIMELINE"|"UNSPECIFIED";centroid:"FIXED_FRAME_CENTER"|"AUTHORED_COMPOSITION"|"UNSPECIFIED";framing:string};
@@ -28,13 +28,17 @@ export function compileCreativeContract(job:CreativeJob):CreativeContract {
     {stage:"TRANSFORM",start_seconds:rounded(duration*.25),end_seconds:rounded(duration*2/3),purpose:"Morph the same object from circle to square.",visual_state:"The one closed contour changes continuously; do not overlay, fade between, or translate separate shapes."},
     {stage:"RESOLVE",start_seconds:rounded(duration*2/3),end_seconds:duration,purpose:"Hold the resolved square.",visual_state:"The final square stays centered and stationary through the end."}
   ]:job.shots_or_beats.map((beat,i)=>({stage:i===0?"ESTABLISH":i===job.shots_or_beats.length-1?"RESOLVE":"TRANSFORM",start_seconds:beat.start,end_seconds:beat.end,purpose:beat.purpose,visual_state:beat.visual_state}));
-  const technical_obligations=morph?[
+  const technical_obligations=authored?[
+    "Verify the original authored-scene master against its declared duration, dimensions, frame rate, streams, full decode and SHA-256.",
+    "Confirm the commercial is silent and has no subtitle stream."
+  ]:morph?[
     "Verify the original encoded master against its declared duration, dimensions, frame rate, streams, full decode and SHA-256.",
     "Confirm the video has no audio or subtitle stream."
   ]:["Verify the original encoded master against the declared technical requirements."];
   const visual_obligations=authored?[
-    "Inspect encoded frames at each authored beat boundary and the final hold.",
-    "Confirm the signal establishes alone, routes reveal progressively, connected elements settle, and the ending holds as one composition.",
+    `Inspect encoded frames at authored times ${authored.visual_sample_times.join(", ")} seconds.`,
+    `Review the authored sequence: ${authored.beats.map(beat=>`${beat.purpose} ${beat.visual_state}`).join("; ")}.`,
+    ...(authored.groups?.length?[`Check continuity across ${authored.groups.length} nested transform groups and their independently animated parts.`]:[]),
     "Check clipping, unintended text, audio and subtitles on the encoded master."
   ]:morph?[
     "Inspect encoded frames at 0.5, 3.5, 5.0, 6.5, 8.5 and 11.5 seconds.",
@@ -44,7 +48,7 @@ export function compileCreativeContract(job:CreativeJob):CreativeContract {
   return {
     contract_version:"creative-contract.v1",job_id:job.job_id,source_prompt:job.source_prompt,
     admission:{state:job.route_decision.status,route:job.route_decision.selected,reason:job.route_decision.reason},
-    subject:{description:job.creative_intent.subject,identity:morph?"ONE_CONTINUOUS_OBJECT":"UNSPECIFIED",actions:[...job.creative_intent.actions]},
+    subject:{description:job.creative_intent.subject,identity:morph?"ONE_CONTINUOUS_OBJECT":authored?"SAME_AUTHORED_PRODUCT":"UNSPECIFIED",actions:authored?authored.beats.map(beat=>beat.purpose):[...job.creative_intent.actions]},
     temporal_contract,source_beats:job.shots_or_beats.map(b=>({...b})),
     camera:{motion:authored?"AUTHORED_TIMELINE":morph?"FIXED":"UNSPECIFIED",centroid:authored?"AUTHORED_COMPOSITION":morph?"FIXED_FRAME_CENTER":"UNSPECIFIED",framing:authored?"1280x720 with bounded authored camera motion.":morph?"Centered in the 16:9 frame.":"Unspecified by the supported contract."},
     visual_style:{description:authored?`${job.creative_intent.style}; authored layered scene ${authored.title}`:job.creative_intent.style,palette:[...job.render_plan.palette]},

@@ -1,0 +1,18 @@
+{
+  "title": "THE LANTERN SENTINEL",
+  "source": "lantern_sentinel.py",
+  "duration_seconds": 10,
+  "fps": 24,
+  "frames": 240,
+  "final": {"width": 1280, "height": 720, "codec": "H.264", "audio": false},
+  "complete_preview": {"width": 320, "height": 180, "fps": 24, "frames": 240, "duration_seconds": 10},
+  "quality_presets": {
+    "interaction": {"width": 320, "height": 180},
+    "preview": {"width": 640, "height": 360},
+    "master": {"width": 1280, "height": 720}
+  },
+  "interaction_sample": {"width": 320, "height": 180, "start_frame": 145, "end_frame": 192},
+  "render_limits": {"max_frame_seconds": 60, "max_frames_per_invocation": 48, "no_overwrite": true},
+  "animation_method": "Authored keyframes with foot and hand inverse-kinematics constraints; not a physics simulation.",
+  "assets": "Original procedural geometry only; no external assets, text, subtitles, or audio."
+}

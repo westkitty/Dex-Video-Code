@@ -194,13 +194,15 @@ for side, sign in (("L", -1), ("R", 1)):
     bone("hand."+side, (sign*.54,-.06,1.61), (sign*.54,-.24,1.58), "forearm."+side, True)
     for f in range(3):
         bone(f"finger{f}.{side}", (sign*.54+(f-1)*.09,-.20,1.58), (sign*.54+(f-1)*.11,-.34,1.55), "hand."+side)
-    bone("thigh."+side, (sign*.20,0,1.46), (sign*.20,0,.82), "pelvis")
-    bone("shin."+side, (sign*.20,0,.82), (sign*.20,0,.17), "thigh."+side, True)
-    bone("foot."+side, (sign*.20,0,.17), (sign*.20,-.34,.14), "shin."+side, True)
-    bone("toe."+side, (sign*.20,-.34,.14), (sign*.20,-.49,.13), "foot."+side, True)
+    # Keep a small forward knee bend in rest pose; Blender's unconstrained
+    # two-bone solve otherwise chooses the backward plane for this straight rig.
+    bone("thigh."+side, (sign*.20,0,1.46), (sign*.20,-.10,.82), "pelvis")
+    bone("shin."+side, (sign*.20,-.10,.82), (sign*.20,-.06,.17), "thigh."+side, True)
+    # Flat rest axes let the foot follow an explicit orientation control.
+    bone("foot."+side, (sign*.20,-.06,.17), (sign*.20,-.40,.17), "shin."+side, True)
+    bone("toe."+side, (sign*.20,-.40,.17), (sign*.20,-.55,.17), "foot."+side, True)
     # IK controls are independent root children, making authored foot plants explicit.
     bone("foot_ik."+side, (sign*.20,-.06,.14), (sign*.20,-.30,.14), "root")
-    bone("knee_pole."+side, (sign*.20,-1.0,.82), (sign*.20,-1.15,.82), "root")
 bone("hand_ik.R", (.54,-.24,1.58), (.54,-.45,1.58), "root")
 bone("hand_ik.L", (-.54,-.24,1.58), (-.54,-.45,1.58), "root")
 bpy.ops.object.mode_set(mode="OBJECT")
@@ -209,17 +211,20 @@ pose = rig.pose.bones
 for p in pose:
     p.rotation_mode = "XYZ"
 
-def add_ik(chain, target, count, pole=None):
+def add_ik(chain, target, count):
     c = pose[chain].constraints.new("IK")
     c.target, c.subtarget, c.chain_count = rig, target, count
     c.use_stretch = False
     c.iterations = 64
-    if pole:
-        c.pole_target, c.pole_subtarget = rig, pole
-        c.pole_angle = math.pi / 2
 
-add_ik("shin.L", "foot_ik.L", 2, "knee_pole.L")
-add_ik("shin.R", "foot_ik.R", 2, "knee_pole.R")
+add_ik("shin.L", "foot_ik.L", 2)
+add_ik("shin.R", "foot_ik.R", 2)
+for side in ("L", "R"):
+    orient = pose["foot."+side].constraints.new("COPY_ROTATION")
+    orient.target, orient.subtarget = rig, "foot_ik."+side
+    orient.owner_space = "WORLD"
+    orient.target_space = "WORLD"
+    orient.mix_mode = "REPLACE"
 add_ik("forearm.R", "hand_ik.R", 2)
 
 def bind_mesh(ob, bone_name):
@@ -272,9 +277,9 @@ for side, s in (("L",-1),("R",1)):
     for f in range(3):
         x=s*.54+(f-1)*.09
         partsegment(f"Hand | articulated finger {f+1} {side}",(x,-.21,1.56),(x,-.32,1.52),(.052,.060),brass,f"finger{f}.{side}",.016)
-    partsegment("Thigh | armored greave "+side,(s*.20,0,1.45),(s*.20,0,.83),(.31,.34),armor,"thigh."+side,.065)
-    partuv("Knee | brass bearing "+side,(s*.20,-.015,.82),(.17,.18,.15),brass,"thigh."+side)
-    partsegment("Shin | ivory guard "+side,(s*.20,0,.80),(s*.20,-.015,.18),(.245,.29),ceramic,"shin."+side,.045)
+    partsegment("Thigh | armored greave "+side,(s*.20,0,1.45),(s*.20,-.10,.83),(.31,.34),armor,"thigh."+side,.065)
+    partuv("Knee | brass bearing "+side,(s*.20,-.11,.82),(.17,.18,.15),brass,"thigh."+side)
+    partsegment("Shin | ivory guard "+side,(s*.20,-.10,.80),(s*.20,-.06,.18),(.245,.29),ceramic,"shin."+side,.045)
     partbox("Foot | broad grounded sole "+side,(s*.20,-.16,.105),(.37,.55,.17),armor,"foot."+side,.055)
     partbox("Foot | toe cap "+side,(s*.20,-.39,.15),(.34,.18,.12),brass,"toe."+side,.04)
     partbox("Shin | brass front inlay "+side,(s*.20,-.155,.51),(.06,.025,.34),brass,"shin."+side,.012)
@@ -355,11 +360,11 @@ keyed("pelvis",[(48,(0,0,0)),(80,(0,.02,-.08)),(96,(0,0,-.08))],"rotation_euler"
 # A short two-step approach: IK targets lift/advance/plant; feet remain still between steps.
 # The torso leans and translates only after each foot starts its swing.
 for name, seq in {
-    "foot_ik.L":[(96,(0,0,0)),(98,(0,0,0)),(104,(0,-.27,.18)),(110,(0,-.55,0)),(144,(0,-.55,0)),(240,(0,-.55,0))],
-    "foot_ik.R":[(96,(0,0,0)),(112,(0,0,0)),(116,(0,-.03,0)),(122,(0,-.30,.18)),(128,(0,-.60,0)),(144,(0,-.60,0)),(240,(0,-.60,0))],
+    "foot_ik.L":[(96,(0,0,0)),(98,(0,0,0)),(104,(0,-.20,.18)),(110,(0,-.40,0)),(144,(0,-.40,0)),(240,(0,-.40,0))],
+    "foot_ik.R":[(96,(0,0,0)),(112,(0,0,0)),(116,(0,-.03,0)),(122,(0,-.34,.18)),(128,(0,-.68,0)),(144,(0,-.68,0)),(240,(0,-.68,0))],
 }.items():
     keyed(name,seq)
-keyed("pelvis",[(96,(0,0,-.08)),(104,(0,-.22,-.04)),(110,(0,-.55,.02)),(122,(0,-.56,-.015)),(128,(0,-.60,.025)),(144,(0,-.60,0)),(240,(0,-.60,0))],"location")
+keyed("pelvis",[(96,(0,0,-.08)),(104,(0,-.08,-.12)),(110,(0,-.20,-.12)),(116,(0,-.20,-.12)),(122,(0,-.30,-.12)),(128,(0,-.40,-.12)),(144,(0,-.60,-.12)),(240,(0,-.60,-.12))],"location")
 keyed("spine",[(96,(0,0,-.12)),(106,(.035,0,-.18)),(112,(0,0,-.12)),(124,(.025,0,-.16)),(132,(0,0,-.10)),(144,(0,0,-.08)),(240,(0,0,-.08))],"rotation_euler")
 keyed("head",[(96,(0,0,-.24)),(112,(0,0,-.31)),(128,(0,0,-.22)),(144,(0,0,-.18)),(192,(0,0,-.18)),(204,(0,.03,-.10)),(218,(0,0,.04)),(240,(0,0,.04))],"rotation_euler")
 

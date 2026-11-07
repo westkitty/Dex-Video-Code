@@ -26,3 +26,23 @@ Quality settings are `interaction` (320×180), `preview` (640×360), and `master
 master used `master`. Rendered media and the saved `.blend` belong in production
 storage and must not be added to Git. Inspect encoded output and verify its full
 decode before any master run.
+
+## P7.1 precision gait repair
+
+`foot_contact_qa.py` evaluates the deformed sole and toe mesh vertices, rig joints,
+and IK targets on all 240 frames without rendering. Run it with Blender 5.2.3:
+
+```sh
+blender --background --python foot_contact_qa.py -- \
+  --source /absolute/path/to/lantern_sentinel.py \
+  --output-root /absolute/production/qa \
+  --output-dir /absolute/production/qa/current-source
+```
+
+The check derives the floor surface from the evaluated floor mesh and classifies
+planted, takeoff, swing, landing, and settled intervals from the authored target
+tracks. It enforces 10 mm floor and planted-height tolerances, 20 mm planted XY
+drift and ankle-target residual, 80 mm peak swing clearance, 150 mm maximum
+frame-to-frame joint displacement, 2 mm chain-length and joint-continuity
+tolerances, and a forward knee bend. `--expect-failure` verifies that a known-bad
+baseline is rejected. This is authored IK animation, not a physical simulation.

@@ -1,5 +1,17 @@
 # Operational state
 
+## Studio V2 documentation handoff — 2026-11-06 (America/Detroit)
+
+- Four **planning-only** files prepared for the authorized GitHub documentation publication: docs/STUDIO_V2_MASTER_PLAN.md, docs/STUDIO_V2_IMPLEMENTATION_BACKLOG.md, docs/STUDIO_V2_VALIDATION_CONTRACT.md, docs/STUDIO_V2_CODEX_START.md. README.md and AGENTS.md link to and govern the new plan. This is not an implementation claim.
+- Source/checkout baseline checked at commit 5abbb7e865dcca56463c7b25246e4353addb771f on main; Big Mac checkout was clean and origin/main matched at inspection. GitHub API reported repository visibility **PUBLIC** on this date, conflicting with older "private" text in README/bridge/Project instructions; privacy and owner decision remain OPEN. Do not publish private media, personal account identifiers, credentials or copyrighted references in this public branch.
+- Recent 12-second circle-to-square renderer test: a silent H.264 MP4 technically passed 12.000 seconds, 1280x720, 24fps, 288 frames, no audio/subtitles, full decode and master SHA; actual visual behavior crossfaded an independently drawn circle/square while moving, not a genuine geometric morph. This is the explicit V2 regression.
+- A playable viewing copy was later uploaded to a private macbook/video render Google Drive folder and the provider returned a file ID/readback metadata, but this did **not** prove that the cloud copy was byte-identical to the Big Mac original master. V2 P1 must solve reliable authenticated upload and checksum/readback before claiming master delivery.
+- Current director supports only one executable local geometric route. The existing HyperFrames pilot is separate and not integrated. Film B, Film C, a general audio system, new canonical/reference ingestion and automated studio delivery are all NOT IMPLEMENTED.
+- Direct Big Mac git push dry-run failed because Git HTTPS credentials were unavailable on that node. Use authenticated GitHub connector for documentation publication when available. Verify GitHub HEAD after any update; do not claim the local Big Mac checkout automatically updated from remote.
+- Plan execution order: P0 baseline -> P1 delivery foundation -> P2 genuine morph/Film A -> P3 verified capability registry/HyperFrames -> P4 director/QA -> P5 commercial -> P6 references/illustration -> P7 conditional articulated 3D/Sunforge -> P8 measured business comparisons. Each phase requires separate validation and appropriate authorization.
+- ChatGPT Project activation remains PROJECT_ACTIVATION_PENDING and user-owned; repository documentation cannot activate it.
+
+
 Updated 2026-11-05 (America/Detroit). This is current evidence for this checkout,
 not a claim that all planned routes or Project settings are active.
 

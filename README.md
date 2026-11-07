@@ -2,6 +2,16 @@
 
 Prompt-first, medium-agnostic creative production coordinator. The CLI interprets a brief, records supported and unsupported intent, and only executes a bounded local adapter when the whole plan is eligible. A private GitHub repository is source control; it is not itself a registered ChatGPT tool or a render service.
 
+## Studio V2 — Approved direction, implementation pending
+
+The product's full next-generation filmmaking plan is tracked in:
+- [Studio V2 Master Plan](docs/STUDIO_V2_MASTER_PLAN.md) — detailed artistic vision, system design, security, media routes, delivery, business benchmarks and risks.
+- [Implementation Backlog](docs/STUDIO_V2_IMPLEMENTATION_BACKLOG.md) — staged execution with exact scope and acceptance gates.
+- [Validation Contract](docs/STUDIO_V2_VALIDATION_CONTRACT.md) — proof standards, negative regression tests, delivery integrity and independent visual review.
+- [Codex Start](docs/STUDIO_V2_CODEX_START.md) — self-contained first implementation handoff.
+
+**Start a fresh coding session at [Codex Start](docs/STUDIO_V2_CODEX_START.md).** P0 baseline and bounded P1 verified master delivery come before full creative/studio expansion. These files are plans, not evidence the proposed capabilities exist. The user experience target is a compelling finished film with a real, validated viewing link and minimal operator intervention. Consult current code and OPERATIONAL_STATE.md for actual working behavior.
+
 ## Verified implementation
 
 - TypeScript CLI: `doctor`, `plan`, `produce`, `status`, `verify`, `pack`.

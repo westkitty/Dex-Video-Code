@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import type { CreativeJob, Capability } from "./types.js";
 import { discoverCapabilities } from "./capabilities.js";
+import { validateAuthoredMotionScene } from "./authored-motion.js";
 const schemaPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../schemas/creative-job.v1.1.schema.json");
 const validateSchema = new Ajv2020({allErrors:true,strict:false}).compile(JSON.parse(readFileSync(schemaPath,"utf8")));
 export function safeRelative(value:string): string {
@@ -13,6 +14,8 @@ export function safeRelative(value:string): string {
 export function validateJob(value: unknown): asserts value is CreativeJob {
   if (!validateSchema(value)) throw new Error(`Invalid CreativeJob v1.1: ${JSON.stringify(validateSchema.errors)}`);
   const job=value as CreativeJob;
+  if(job.authored_motion){validateAuthoredMotionScene(job.authored_motion);if(job.render_plan.kind!=="authored_motion"||job.brief.duration_seconds!==job.authored_motion.duration_seconds||job.render_plan.width!==job.authored_motion.width||job.render_plan.height!==job.authored_motion.height||job.render_plan.fps!==job.authored_motion.fps||job.brief.captions!=="off"||job.brief.format!=="mp4"||job.assets.length)throw new Error("Authored motion scene does not match the eligible silent MP4 job.");}
+  else if(job.render_plan.kind==="authored_motion")throw new Error("Authored motion renderer requires an embedded, validated scene contract.");
   for (const artifact of job.artifacts) safeRelative(artifact.path);
   if (job.route_decision.selected.toLowerCase().includes("comfy")) throw new Error("Excluded route cannot be selected.");
   for (const step of job.execution_plan) {
@@ -23,8 +26,9 @@ export function validateJob(value: unknown): asserts value is CreativeJob {
   const snapshotCapabilities:Capability[]=job.route_decision.evidence.flatMap(line=>{const match=line.match(/^(local\.[^:]+): (VERIFIED|AVAILABLE_UNPROVEN|DORMANT|BROKEN|UNAVAILABLE|EXCLUDED)$/);return match?[{id:match[1]!,state:match[2] as Capability["state"],host:"persisted plan snapshot",reason:"Capability state recorded when this plan was created.",cost:"unknown",privacy:"local"}]:[];});
   const expected=planCreativeJob(job.source_prompt,snapshotCapabilities);
   const expectedRender={...expected.render_plan};if(!Object.hasOwn(job.render_plan,"shape_transform_mode"))delete expectedRender.shape_transform_mode;
+  const actualRender={...job.render_plan};if(job.authored_motion)actualRender.kind=expected.render_plan.kind;
   const same=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
-  if(!same(job.brief,expected.brief)||!same(job.creative_intent,expected.creative_intent)||!same(job.render_plan,expectedRender)||!same(job.shots_or_beats,expected.shots_or_beats)||!same(job.execution_plan,expected.execution_plan)||job.route_decision.selected!==expected.route_decision.selected||job.route_decision.status!==expected.route_decision.status||job.route_decision.reason!==expected.route_decision.reason||job.artifacts.length!==1||job.artifacts[0]?.format!==expected.artifacts[0]?.format||job.artifacts[0]?.role!=="master"||job.route_decision.status==="READY"&&job.assets.length>0)throw new Error("Creative plan fields do not match source_prompt and current capability; re-plan before execution.");
+  if(!same(job.brief,expected.brief)||!same(job.creative_intent,expected.creative_intent)||!same(actualRender,expectedRender)||!same(job.shots_or_beats,expected.shots_or_beats)||!same(job.execution_plan,expected.execution_plan)||job.route_decision.selected!==expected.route_decision.selected||job.route_decision.status!==expected.route_decision.status||job.route_decision.reason!==expected.route_decision.reason||job.artifacts.length!==1||job.artifacts[0]?.format!==expected.artifacts[0]?.format||job.artifacts[0]?.role!=="master"||job.route_decision.status==="READY"&&job.assets.length>0)throw new Error("Creative plan fields do not match source_prompt and current capability; re-plan before execution.");
 }
 export function normalizeJob(value: unknown): CreativeJob {
   if ((value as {schema_version?:string})?.schema_version === "1.1") { validateJob(value); return value as CreativeJob; }

@@ -6,9 +6,11 @@ import type { CreativeJob } from "./types.js";
 import { safeRelative } from "./job.js";
 import { assertNoSymlinks, ensureDirectoriesNoSymlink } from "./paths.js";
 import { circleSquareContour } from "./morph.js";
+import { authoredMotionFrameSvg } from "./authored-motion.js";
 export { assertNoSymlinks } from "./paths.js";
 const xml=(s:string)=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[c]!));
 export function frameSvg(job:CreativeJob,frame:number):string {
+  if(job.authored_motion)return authoredMotionFrameSvg(job.authored_motion,frame);
   const {width:W,height:H,palette}=job.render_plan; const [bg,accent,highlight]=palette;
   const t=frame/job.render_plan.fps, duration=job.brief.duration_seconds, progress=Math.min(1,t/duration);
   const x=(W*(.18+.64*progress)).toFixed(1), y=(H*(.56-.26*Math.sin(progress*Math.PI))).toFixed(1);

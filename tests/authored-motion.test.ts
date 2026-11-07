@@ -1,0 +1,16 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {makeJob,validateJob} from "../src/job.js";
+import {authoredMotionFrameSvg,sampleMotionTrack,validateAuthoredMotionScene,type AuthoredMotionScene} from "../src/authored-motion.js";
+import {frameSvg} from "../src/render.js";
+
+const scene=JSON.parse(readFileSync(new URL("../../examples/films/the-last-signal.scene.json",import.meta.url),"utf8")) as AuthoredMotionScene;
+const job=()=>{const value=makeJob("Create a 20-second motion graphic showing one signal traveling through geometric pathways, no text or subtitles.");value.authored_motion=structuredClone(scene);value.render_plan.kind="authored_motion";value.artifacts[0]!.path="outputs/the-last-signal/master.mp4";return value;};
+const opacity=(svg:string,id:string)=>Number(svg.match(new RegExp(`<g data-element="${id}"[^>]*opacity="([^"]+)"`))?.[1]);
+
+test("authored scene contract supports multiple independent, bounded timelines",()=>{validateAuthoredMotionScene(scene);assert.ok(scene.elements.length>=10);assert.equal(scene.tracks.length,scene.elements.length);assert.deepEqual(scene.beats.map(b=>[b.start,b.end]),[[0,3.2],[3.2,7.8],[7.8,13.5],[13.5,17.5],[17.5,20]]);assert.deepEqual(scene.visual_sample_times,[.5,2.5,3.5,5,7.5,8,10,13.5,15.5,17.5,19.5]);});
+test("keyframe sampler interpolates values and honors authored easing",()=>{const track=[{at:0,x:0,opacity:0,easing:"linear" as const},{at:2,x:100,opacity:1,easing:"linear" as const}];assert.deepEqual(sampleMotionTrack(track,1),{x:50,y:0,scale:1,rotation:0,opacity:.5,reveal:1});assert.equal(sampleMotionTrack(track,-3).opacity,0);assert.equal(sampleMotionTrack(track,4).x,100);});
+test("path validation rejects markup injection and timeline gaps",()=>{const injection=structuredClone(scene);injection.elements.find(x=>x.geometry==="path")!.path='M0 0"/><script/>';assert.throws(()=>validateAuthoredMotionScene(injection),/unsupported path data/);const gap=structuredClone(scene);gap.beats[1]!.start=3.4;assert.throws(()=>validateAuthoredMotionScene(gap),/contiguous/);});
+test("scene frames stage the lone signal, sequential routes and a quiet final hold",()=>{const alone=authoredMotionFrameSvg(scene,2.8*24);assert.match(alone,/data-element="signal-core"/);assert.doesNotMatch(alone,/<text\b/);for(const id of ["route-north","route-south","route-east-north","northwest-node","far-node"])assert.equal(opacity(alone,id),0);const network=frameSvg(job(),12*24);assert.ok(opacity(network,"route-north")>.6);assert.ok(opacity(network,"far-node")>0);const settled=frameSvg(job(),17.5*24),end=frameSvg(job(),479);assert.equal(settled,end);assert.match(end,/data-element="signal-core" transform="translate\(180 360\) translate\(405 0\)/);assert.match(end,/gradientUnits="userSpaceOnUse" cx="640" cy="360"/);assert.match(end,/width="1280" height="720" fill="url\(#scene-backdrop\)"/);assert.doesNotMatch(end,/<text\b|<image\b/);});
+test("authored scene jobs remain on the existing allowlisted director route",()=>{const value=job();validateJob(value);assert.equal(value.route_decision.status,"READY");assert.equal(value.execution_plan[0]?.adapter,"motion-graphics-local");assert.equal(value.execution_plan[0]?.operation,"render-original-motion-graphic");assert.equal(value.render_plan.kind,"authored_motion");});

@@ -12,6 +12,14 @@ test("registry keeps unproven or historical workers from gaining a route admissi
   const r=capabilityRegistry();assert.equal(r.find(x=>x.id==="hyperframes.controller")?.status,"HISTORICAL_ONLY");assert.deepEqual(r.find(x=>x.id==="hyperframes.controller")?.operations,[]);assert.equal(r.find(x=>x.id==="comfyui")?.status,"EXCLUDED");
   const blocked=routeAdmission(makeJob("Create a 40-second cinematic 3D sword fight between two animated characters"),r);assert.equal(blocked.selected,null);assert.equal(blocked.decision,"BLOCKED");
 });
+test("standalone P7.3 proof does not unlock director 3D without typed dispatch",()=>{
+  const registry=capabilityRegistry(),threeD=registry.find(x=>x.id==="native.articulated-3d")!;
+  assert.equal(threeD.status,"BLOCKED");assert.deepEqual(threeD.operations,[]);
+  assert.match(threeD.reason,/cannot safely dispatch/i);
+  assert.match(threeD.constraints.join(" "),/not a general multi-character/i);
+  const job=makeJob("Create a 6-second 3D character performance with a mechanical Sentinel.");
+  const admission=routeAdmission(job,registry);assert.equal(admission.decision,"BLOCKED");assert.equal(admission.selected,null);
+});
 test("a verified local job binds proof to its job id, hash and observation",()=>{
   const when="2026-11-07T00:00:00.000Z",r=capabilityRegistry({job_id:"job-safe",sha256:"a".repeat(64),verified_at:when,host:"local test host"});const local=r.find(x=>x.id==="local.motion-graphics")!;assert.equal(local.status,"VERIFIED_LIVE");assert.ok(local.proof.includes(`Master SHA-256 ${"a".repeat(64)}`));assert.ok(local.proof.includes(`Verified ${when}`));
 });

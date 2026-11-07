@@ -17,11 +17,18 @@ def parse_args():
     parser.add_argument("--source", required=True, help="lantern_sentinel.py to evaluate")
     parser.add_argument("--output-root", required=True, help="confined production root")
     parser.add_argument("--output-dir", required=True, help="new child directory for the build-only scene")
+    parser.add_argument("--performance-contract", help="optional bounded P7 performance JSON contract")
     parser.add_argument("--expect-failure", action="store_true", help="require a known-bad baseline to fail")
     return parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
 
 
 def build_scene(args):
+    if args.performance_contract:
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from second_light import build_scene as build_second_light
+        namespace, _ = build_second_light(Path(args.output_root).resolve(), Path(args.output_dir).resolve(), args.performance_contract)
+        return namespace
     sys.argv = [
         args.source, "--", "--output-root", args.output_root,
         "--output-dir", args.output_dir, "--quality", "interaction",
@@ -112,7 +119,7 @@ def hold_drift(rows):
     return max(values, default=0.0)
 
 
-def analyze(namespace):
+def analyze(namespace, require_step_both=True):
     import bpy
     from mathutils import Vector
 
@@ -259,11 +266,13 @@ def analyze(namespace):
             if row["phase"] in ("takeoff", "swing", "landing")
         ]
         foot_report["swing_motion"] = {
-            "min_clearance_m": min(swing_clearances),
-            "peak_clearance_m": max(swing_clearances),
+            "min_clearance_m": min(swing_clearances) if swing_clearances else None,
+            "peak_clearance_m": max(swing_clearances) if swing_clearances else None,
         }
-        if max(swing_clearances) < 0.08:
+        if swing_clearances and max(swing_clearances) < 0.08:
             report["failures"].append(f"{side}: step lacks 0.08 m measured swing clearance")
+        if not swing_clearances and require_step_both:
+            report["failures"].append(f"{side}: no authored swing phase was detected")
         report["feet"][side] = foot_report
 
     report["joint_integrity"] = {
@@ -286,10 +295,101 @@ def analyze(namespace):
     return report
 
 
+def analyze_interaction(namespace, report):
+    """Check evaluated finger/prop proximity and switch-before-light causality."""
+    import bpy
+    from mathutils import Vector
+
+    scene = namespace["scene"]
+    contract = namespace.get("second_light_contract")
+    objects = namespace.get("second_light_objects")
+    if not contract or not objects:
+        return report
+    actions = {item["type"]: item for item in contract["actions"]}
+    rotate = actions["rotate_switch"]
+    reach = actions["reach_switch"]
+    lamp_event = actions["lamp_response"]
+    pivot, lamp, handle = namespace["switch_pivot"], objects["lamp"], objects["handle"]
+    hand_meshes = [bpy.data.objects.get(f"Hand | articulated finger {i} R") for i in range(1, 4)]
+
+    def world_vertices(obj, depsgraph):
+        evaluated = obj.evaluated_get(depsgraph)
+        mesh = evaluated.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph)
+        points = [evaluated.matrix_world @ v.co for v in mesh.vertices]
+        evaluated.to_mesh_clear()
+        return points
+
+    samples = []
+    worst_contact = None
+    contact_arm_residuals = []
+    reach_end_residual = None
+    for frame in range(reach["start_frame"], rotate["end_frame"] + 1):
+        scene.frame_set(frame)
+        bpy.context.view_layer.update()
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        rig_eval = namespace["rig"].evaluated_get(depsgraph)
+        evaluated_pose = rig_eval.pose.bones
+        wrist = world_point(rig_eval, evaluated_pose["forearm.R"], "tail")
+        target = world_point(rig_eval, evaluated_pose["hand_ik.R"], "head")
+        arm_residual = (wrist - target).length
+        if frame == reach["end_frame"]:
+            reach_end_residual = arm_residual
+        if frame >= rotate["start_frame"]:
+            contact_arm_residuals.append(arm_residual)
+            grip = world_vertices(handle, depsgraph)
+            fingers = [point for obj in hand_meshes if obj for point in world_vertices(obj, depsgraph)]
+            pairs = [((a - b).length, a, b) for a in fingers for b in grip]
+            gap, finger_point, grip_point = min(pairs, key=lambda item: item[0])
+            samples.append(gap)
+            if worst_contact is None or gap > worst_contact["gap_m"]:
+                worst_contact = {
+                    "frame": frame,
+                    "gap_m": gap,
+                    "finger_point_m": list(finger_point),
+                    "grip_point_m": list(grip_point),
+                }
+    scene.frame_set(rotate["start_frame"])
+    bpy.context.view_layer.update()
+    angle_before = float(pivot.rotation_euler.y)
+    scene.frame_set(rotate["end_frame"])
+    bpy.context.view_layer.update()
+    angle_after = float(pivot.rotation_euler.y)
+    scene.frame_set(lamp_event["start_frame"] - 1)
+    bpy.context.view_layer.update()
+    energy_before = float(lamp.data.energy)
+    scene.frame_set(lamp_event["end_frame"])
+    bpy.context.view_layer.update()
+    energy_after = float(lamp.data.energy)
+    report["interaction"] = {
+        "interaction_frames": [reach["start_frame"], rotate["end_frame"]],
+        "wheel_rotation_radians": abs(angle_after - angle_before),
+        "max_finger_to_grip_distance_m": max(samples),
+        "worst_finger_to_grip_sample": worst_contact,
+        "reach_end_wrist_to_target_residual_m": reach_end_residual,
+        "max_contact_wrist_to_IK_target_residual_m": max(contact_arm_residuals),
+        "lamp_energy_before_event": energy_before,
+        "lamp_energy_after_event": energy_after,
+        "contact_precedes_light": rotate["end_frame"] < lamp_event["start_frame"],
+    }
+    if max(samples) > .06:
+        report["failures"].append("fingers do not remain within 0.06 m of the rotating grip")
+    if reach_end_residual is None or reach_end_residual > .02 or max(contact_arm_residuals) > .02:
+        report["failures"].append("reaching arm wrist misses its IK target by more than 0.02 m")
+    if abs(angle_after - angle_before) < .4:
+        report["failures"].append("handwheel does not rotate through a meaningful angle")
+    if energy_before > 1 or energy_after < 200 or rotate["end_frame"] >= lamp_event["start_frame"]:
+        report["failures"].append("lamp response is not caused after switch rotation")
+    report["pass"] = not report["failures"]
+    return report
+
+
 def main():
     args = parse_args()
     namespace = build_scene(args)
-    report = analyze(namespace)
+    is_performance = bool(args.performance_contract)
+    report = analyze(namespace, require_step_both=not is_performance)
+    if is_performance:
+        report = analyze_interaction(namespace, report)
     print("P7_FOOT_CONTACT_REPORT " + json.dumps(report, sort_keys=True), flush=True)
     if args.expect_failure and report["pass"]:
         raise SystemExit("baseline unexpectedly passed foot-contact acceptance")

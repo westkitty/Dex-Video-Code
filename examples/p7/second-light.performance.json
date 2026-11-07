@@ -1,0 +1,22 @@
+{
+  "schema_version": "p7.performance.v1",
+  "performance_id": "the_second_light_v1",
+  "title": "THE SECOND LIGHT",
+  "character": {"preset": "lantern_sentinel_v1"},
+  "duration_seconds": 6,
+  "fps": 24,
+  "frame_count": 144,
+  "actions": [
+    {"type": "study_switch", "start_frame": 1, "end_frame": 29, "target": "switch"},
+    {"type": "prepare_step", "start_frame": 30, "end_frame": 60, "target": "switch"},
+    {"type": "step", "start_frame": 61, "end_frame": 91, "target": "switch", "side": "L"},
+    {"type": "reach_switch", "start_frame": 92, "end_frame": 107, "target": "switch", "side": "R"},
+    {"type": "rotate_switch", "start_frame": 108, "end_frame": 119, "target": "switch", "side": "R"},
+    {"type": "lamp_response", "start_frame": 120, "end_frame": 131, "target": "lamp"},
+    {"type": "look_lamp", "start_frame": 132, "end_frame": 137, "target": "lamp"},
+    {"type": "settle", "start_frame": 138, "end_frame": 144, "target": "lamp"}
+  ],
+  "camera": {"preset": "chamber_three_quarter_v1", "lens_mm": 52},
+  "render": {"preview": [320, 180], "master": [1280, 720], "fps": 24, "codec": "h264", "audio": false, "subtitles": false, "text": false},
+  "assets": []
+}

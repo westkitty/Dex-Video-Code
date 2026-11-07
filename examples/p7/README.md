@@ -46,3 +46,31 @@ drift and ankle-target residual, 80 mm peak swing clearance, 150 mm maximum
 frame-to-frame joint displacement, 2 mm chain-length and joint-continuity
 tolerances, and a forward knee bend. `--expect-failure` verifies that a known-bad
 baseline is rejected. This is authored IK animation, not a physical simulation.
+
+## P7.3 bounded character performance
+
+`performance.py` validates the data-only `p7.performance.v1` contract and applies
+the allowlisted Sentinel action controls to the existing character builder in
+`lantern_sentinel.py`. The contract rejects executable instructions, unknown
+rigs/actions, external assets, unsafe contract paths and out-of-range timing.
+`second_light.py` confines output below an explicit root, limits a run to 48
+frames, refuses existing frame files and records frame timings/resource use.
+Render in separate new output directories for each frame batch:
+
+```sh
+blender --background --python second_light.py -- \
+  --output-root /absolute/production/run \
+  --output-dir /absolute/production/run/frames-001 \
+  --performance /path/to/approved/second-light.performance.json \
+  --quality interaction --start-frame 1 --end-frame 48
+```
+
+The current implementation supports one authored story/action set: THE SECOND
+LIGHT. It reuses the Sentinel rig, IK, foot-lock and scene builder, but its
+prop/action choreography is still authored specifically for this film. It is
+not a general multi-character or arbitrary-scene system. `foot_contact_qa.py`
+accepts `--performance-contract` to test the full gait, arm reach, finger/grip
+distance, switch rotation and contact-before-light ordering without rendering.
+The director does not dispatch to the Big Mac specialist runner; 3D remains
+blocked for Director jobs until a typed authorized bridge and receipt
+reconciliation are implemented and verified end to end.

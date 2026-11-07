@@ -46,3 +46,38 @@ To render an authored example, use a prompt that matches its medium and duration
 Planning creates missing parent directories inside the current project workspace, refuses symlink escapes, and never overwrites an existing manifest. `produce` refuses unsupported or blocked jobs. The renderer's title text is omitted when the brief prohibits text. Verification records technical status only; `PENDING_HUMAN_REVIEW` is not an artistic pass.
 
 See [operational state](OPERATIONAL_STATE.md), [bridge contract](docs/PROJECT_BRIDGE.md), [Project bootstrap](docs/CHATGPT_PROJECT_BOOTSTRAP.md), [Project setup](docs/CHATGPT_PROJECT_SETUP.md), and [Project instructions](docs/CHATGPT_PROJECT_INSTRUCTIONS.md).
+
+# Verified binary transfer
+
+`scripts/transfer_verified_file.py` pulls one file from an explicitly named
+SSH host/account into an existing local destination directory. Supply approved
+remote and local roots, expected byte count, and SHA-256. It requires an
+existing trusted host-key entry (`StrictHostKeyChecking=yes`), probes the
+remote source for symlinks and exact bytes, downloads to a private temporary
+directory, verifies the local bytes, then atomically creates the destination
+name without replacing an existing file. A JSON receipt is written beside the
+destination. Interrupted attempts can be rerun; an exact existing destination
+is reverified without being overwritten, and a mismatching destination fails.
+
+Example (replace every path and identity with values already authorized on the
+current machines):
+
+```sh
+python3 scripts/transfer_verified_file.py \
+  --source-host ssh-config-alias \
+  --source-user transfer-account \
+  --source-root /approved/remote/export \
+  --source-path /approved/remote/export/master.mp4 \
+  --destination-root /approved/local/output \
+  --destination /approved/local/output/master.mp4 \
+  --bytes 1013755 \
+  --sha256 <expected-sha256>
+```
+
+The helper stores no machine-specific configuration or credentials. It does
+not create host keys, modify SSH configuration, grant remote permissions, or
+alter the source. A remote account must already be authorized to read the
+source path. Python 3, OpenSSH `ssh`/`scp`, and an existing known-host entry are
+required.
+
+Run the focused helper regressions with `python3 tests/test_transfer_verified_file.py`.

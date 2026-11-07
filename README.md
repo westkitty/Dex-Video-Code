@@ -1,6 +1,6 @@
 # Dex Video Code
 
-Prompt-first, medium-agnostic creative production coordinator. The CLI interprets a brief, records supported and unsupported intent, and only executes a bounded local adapter when the whole plan is eligible. A private GitHub repository is source control; it is not itself a registered ChatGPT tool or a render service.
+Prompt-first, medium-agnostic creative production coordinator. The CLI interprets a brief, records supported and unsupported intent, and only executes a bounded local adapter when the whole plan is eligible. A public GitHub repository is source control; it is not itself a registered ChatGPT tool or a render service.
 
 ## Studio V2 — Implementation in progress
 
@@ -24,7 +24,7 @@ The product's full next-generation filmmaking plan is tracked in:
 - `director auth-google --client-id <id> --picker-api-key <key> --project-number <number>` uses browser-based desktop OAuth with PKCE and a loopback callback, then Google Picker to authorize the selected folder under least-privilege `drive.file`. Refresh credentials go to macOS Keychain. `director configure-drive --folder-id <id>` saves a local-only destination. `director deliver --job <manifest>` renews expired tokens, retries a rejected access token once, and re-verifies the original MP4 before resumable upload. It never grants link-sharing permissions. The ignored job receipt marks `DELIVERED_VERIFIED` only after comparable provider checksum, private parent/permissions and viewing-link readback. OAuth client and Picker API configuration plus user sign-in are required; no client secret is used.
 - An opt-in `continuous_circle_square_v1` geometry mode renders a continuous circle-to-square contour with fixed centroid, staged timing and a held final square; old manifests retain their prior rendering. `visual-samples` extracts hashed frames only after a verified master and records pending review without claiming human approval.
 - `doctor` and planning expose an evidence-backed capability registry and typed creative contract. `verify-assets --job ... --assets ...` checks local asset hashes and confines paths; its receipt does not establish rights, consent or production admission. HyperFrames, narrative/illustrated production, commercial practical filmmaking and articulated 3D remain unproven or blocked as documented in the operational state.
-- Production stayed on the authorized local hosts; no public upload, cloud call, model install or additional spend occurred. ComfyUI is excluded.
+- Earlier private MP4 delivery used the already-authorized Google Drive connector; the standalone CLI still lacks its own Google OAuth authorization. No video was published publicly, and this pass installed no model and incurred no additional spend. ComfyUI is excluded.
 
 Requires Node.js 22+, FFmpeg/ffprobe, and an SVG rasterizer (`sips` on macOS; `magick` elsewhere) for rendering and media verification.
 

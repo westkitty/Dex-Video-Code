@@ -12,18 +12,18 @@ import {DeliveryError,GoogleDriveDeliveryAdapter,driveConfigFromEnv,type DriveFi
 const folder="folder12345",token="not-a-real-token";
 const hash=(data:Buffer,algorithm:"md5"|"sha256")=>createHash(algorithm).update(data).digest("hex");
 function response(body:unknown,status=200,headers?:HeadersInit){return new Response(body===undefined?null:JSON.stringify(body),{status,headers});}
-async function fixture(options:{folderPublic?:boolean;parent?:string;md5?:string|false;permission?:boolean;uploadFailure?:boolean;rateLimited?:boolean;quota?:boolean}={}){
+async function fixture(options:{folderPublic?:boolean;parent?:string;md5?:string|false;permission?:boolean;uploadFailure?:boolean;rateLimited?:boolean;quota?:boolean;mutateSourceDuringUpload?:boolean}={}){
   const dir=await mkdtemp(path.join(tmpdir(),"dvc-drive-")),file=path.join(dir,"master.mp4"),bytes=Buffer.from("verified original mp4 fixture");await writeFile(file,bytes);
   const job=makeJob("Create a 1-second motion graphic showing a transforming circle without text");job.job_id="job-test-123";
-  let uploaded=0,queries=0,put=0,folderCalls=0,initMetadata:any;let remote:DriveFile|undefined;
+  let uploaded=0,queries=0,put=0,folderCalls=0,initMetadata:any,uploadedChunk:Buffer|undefined;let remote:DriveFile|undefined;
   const baseFile=(body:any):DriveFile=>({id:"remoteFile123",name:body.name,mimeType:"video/mp4",parents:[options.parent??folder],size:String(bytes.length),...(options.md5===false?{}:{md5Checksum:options.md5??hash(bytes,"md5")}),webViewLink:"https://drive.google.com/file/d/remoteFile123/view",permissions:options.permission===false?undefined:[{type:"user"}],appProperties:body.appProperties});
   const fetcher:FetchLike=async(input,init={})=>{
     const url=String(input),method=init.method??"GET";
     if(url.includes(`/files/${folder}?`)){folderCalls++;if(options.rateLimited&&folderCalls===1)return response({error:{errors:[{reason:"userRateLimitExceeded"}]}},403);if(options.quota)return response({error:{errors:[{reason:"storageQuotaExceeded"}]}},403);return response({id:folder,mimeType:"application/vnd.google-apps.folder",permissions:options.folderPublic?[{type:"anyone"}]:[{type:"user"}]});}
     if(url.includes("/files?")&&method==="GET"){queries++;return response({files:remote?[remote]:[]});}
-    if(url.includes("uploadType=resumable")){uploaded++;initMetadata=JSON.parse(String(init.body));return response(undefined,200,{Location:"https://www.googleapis.com/upload/drive/v3/files?upload_id=private-session"});}
+    if(url.includes("uploadType=resumable")){uploaded++;initMetadata=JSON.parse(String(init.body));if(options.mutateSourceDuringUpload)await writeFile(file,Buffer.from("changed after snapshot"));return response(undefined,200,{Location:"https://www.googleapis.com/upload/drive/v3/files?upload_id=private-session"});}
     if(url.includes("upload_id=private-session")&&method==="PUT"){
-      put++;
+      put++;if(Buffer.isBuffer(init.body))uploadedChunk=Buffer.from(init.body);
       if(options.uploadFailure&&put===1)throw new TypeError("connection reset");
       if(String(new Headers(init.headers).get("Content-Range")).startsWith("bytes */"))return response(undefined,308);
       remote=baseFile(initMetadata);return response(remote,201);
@@ -32,11 +32,12 @@ async function fixture(options:{folderPublic?:boolean;parent?:string;md5?:string
     throw new Error(`Unexpected fixture request ${method} ${url}`);
   };
   const adapter=new GoogleDriveDeliveryAdapter({accessToken:token,folderId:folder},fetcher,async()=>{});
-  return {dir,file,bytes,job,adapter,counts:()=>({uploaded,queries,put}),deliver:()=>adapter.deliver(job,file,hash(bytes,"sha256"),"outputs/master.mp4"),getRemote:()=>remote};
+  return {dir,file,bytes,job,adapter,counts:()=>({uploaded,queries,put}),deliver:()=>adapter.deliver(job,file,hash(bytes,"sha256"),"outputs/master.mp4"),getRemote:()=>remote,getUploadedChunk:()=>uploadedChunk};
 }
 test("Drive delivery uploads the verified exact master and returns a private verified receipt",async()=>{const f=await fixture();try{const receipt=await f.deliver();assert.equal(receipt.state,"DELIVERED_VERIFIED");assert.equal(receipt.source_sha256,hash(f.bytes,"sha256"));assert.equal(receipt.source_bytes,f.bytes.length);assert.equal(receipt.readback,"drive-md5-checksum");assert.equal(receipt.web_view_link,"https://drive.google.com/file/d/remoteFile123/view");assert.equal(receipt.parent_id,folder);assert.equal(receipt.private,true);assert.equal(receipt.source_path,"outputs/master.mp4");}finally{await rm(f.dir,{recursive:true,force:true});}});
 test("retry after uncertain completed upload reconciles by private idempotency key without duplicate",async()=>{const f=await fixture();try{await f.deliver();const before=f.counts();const again=await f.deliver();assert.equal(again.state,"DELIVERED_VERIFIED");assert.equal(f.counts().uploaded,before.uploaded);assert.equal(f.counts().queries,before.queries+1);}finally{await rm(f.dir,{recursive:true,force:true});}});
 test("interrupted chunk is reconciled with upload status before another chunk is sent",async()=>{const f=await fixture({uploadFailure:true});try{const receipt=await f.deliver();assert.equal(receipt.state,"DELIVERED_VERIFIED");assert.equal(f.counts().put,3);/* interrupted PUT, status query, resumed PUT */}finally{await rm(f.dir,{recursive:true,force:true});}});
+test("upload uses the private verified snapshot even if the source path changes mid-delivery",async()=>{const f=await fixture({mutateSourceDuringUpload:true});try{const receipt=await f.deliver();assert.equal(receipt.state,"DELIVERED_VERIFIED");assert.deepEqual(f.getUploadedChunk(),f.bytes);assert.deepEqual(await readFile(f.file),Buffer.from("changed after snapshot"));}finally{await rm(f.dir,{recursive:true,force:true});}});
 test("changed or stale source bytes are rejected before upload",async()=>{const f=await fixture();try{await assert.rejects(f.adapter.deliver(f.job,f.file,"0".repeat(64)),/changed after verification/);assert.equal(f.counts().uploaded,0);}finally{await rm(f.dir,{recursive:true,force:true});}});
 test("public destination folder fails closed before upload",async()=>{const f=await fixture({folderPublic:true});try{await assert.rejects(f.deliver(),/public link access/);assert.equal(f.counts().uploaded,0);}finally{await rm(f.dir,{recursive:true,force:true});}});
 test("missing comparable provider checksum remains unverified and withholds link",async()=>{const f=await fixture({md5:false});try{const r=await f.deliver();assert.equal(r.state,"DELIVERED_UNVERIFIED");assert.equal(r.web_view_link,undefined);assert.match(r.error??"",/checksum/);}finally{await rm(f.dir,{recursive:true,force:true});}});

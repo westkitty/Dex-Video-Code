@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { open, stat } from "node:fs/promises";
+import { chmod, copyFile, mkdtemp, open, rm, stat } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import type { CreativeJob } from "./types.js";
 
@@ -97,13 +98,21 @@ export class GoogleDriveDeliveryAdapter {
     throw new DeliveryError("Drive upload ended without a completed file response.","RETRYABLE");
   }
   async deliver(job:CreativeJob,filePath:string,verifiedSha:string,sourceRelativePath=path.basename(filePath)):Promise<DeliveryReceipt>{
-    await this.ensurePrivateFolder();const f=await open(filePath,"r"),h256=createHash("sha256"),hmd5=createHash("md5");let bytes=0;const start=await stat(filePath);
-    try{for await(const chunk of f.createReadStream({autoClose:false})){h256.update(chunk);hmd5.update(chunk);bytes+=chunk.length;}}finally{await f.close();}
-    const sha=h256.digest("hex"),md5=hmd5.digest("hex");if(bytes!==start.size||sha!==verifiedSha)throw new DeliveryError("Master changed after verification; refusing upload.","FAILED");
-    const key=createHash("sha256").update(`${job.job_id}\0${sha}`).digest("hex");const filename=`${safeName(path.basename(filePath))}-${safeName(job.job_id)}-${sha.slice(0,12)}.mp4`;
-    const expected={key,name:filename,bytes,md5};let remote=await this.findByKey(key);if(remote){const status=this.validateFile(remote,expected);return this.receipt(job,sourceRelativePath,sha,md5,bytes,key,filename,remote,status.verified);}
-    const remoteCreated=await this.uploadResumable(filePath,bytes,filename,key);remote=await this.getFile(validId(remoteCreated.id,"Drive file id"));
-    const status=this.validateFile(remote,expected);return this.receipt(job,sourceRelativePath,sha,md5,bytes,key,filename,remote,status.verified,status.reason);
+    await this.ensurePrivateFolder();
+    // Upload a private snapshot, not a path reopened after hashing. This closes the
+    // time-of-check/time-of-use gap if a producer or external process changes the master.
+    const snapshotDir=await mkdtemp(path.join(os.tmpdir(),"dex-video-drive-"));
+    const snapshot=path.join(snapshotDir,"verified-master.mp4");
+    try{
+      await copyFile(filePath,snapshot);await chmod(snapshot,0o600);
+      const f=await open(snapshot,"r"),h256=createHash("sha256"),hmd5=createHash("md5");let bytes=0;const start=await stat(snapshot);
+      try{for await(const chunk of f.createReadStream({autoClose:false})){h256.update(chunk);hmd5.update(chunk);bytes+=chunk.length;}}finally{await f.close();}
+      const sha=h256.digest("hex"),md5=hmd5.digest("hex");if(bytes!==start.size||sha!==verifiedSha)throw new DeliveryError("Master changed after verification; refusing upload.","FAILED");
+      const key=createHash("sha256").update(`${job.job_id}\0${sha}`).digest("hex");const filename=`${safeName(path.basename(filePath))}-${safeName(job.job_id)}-${sha.slice(0,12)}.mp4`;
+      const expected={key,name:filename,bytes,md5};let remote=await this.findByKey(key);if(remote){const status=this.validateFile(remote,expected);return this.receipt(job,sourceRelativePath,sha,md5,bytes,key,filename,remote,status.verified);}
+      const remoteCreated=await this.uploadResumable(snapshot,bytes,filename,key);remote=await this.getFile(validId(remoteCreated.id,"Drive file id"));
+      const status=this.validateFile(remote,expected);return this.receipt(job,sourceRelativePath,sha,md5,bytes,key,filename,remote,status.verified,status.reason);
+    }finally{await rm(snapshotDir,{recursive:true,force:true});}
   }
   private receipt(job:CreativeJob,sourcePath:string,sha:string,md5:string,bytes:number,key:string,name:string,file:DriveFile,verified:boolean,reason?:string):DeliveryReceipt{
     const base:DeliveryReceipt={schema_version:1,state:verified?"DELIVERED_VERIFIED":"DELIVERED_UNVERIFIED",job_id:job.job_id,source_path:sourcePath,source_sha256:sha,source_md5:md5,source_bytes:bytes,provider:"google-drive",parent_id:this.config.folderId,file_id:file.id,file_name:name,mime_type:"video/mp4",...(file.md5Checksum?{provider_md5:file.md5Checksum,readback:"drive-md5-checksum" as const}:{}),idempotency_key:key,private:true,created_at:new Date().toISOString(),...(verified?{verified_at:new Date().toISOString()}:{}),...(!verified?{error:reason??"No comparable remote checksum was available."}:{})};

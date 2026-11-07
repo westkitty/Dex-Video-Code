@@ -2,7 +2,7 @@
 
 ## Identity and transport
 
-- Source: private `https://github.com/westkitty/Dex-Video-Code`, branch `main`.
+- Source: public `https://github.com/westkitty/Dex-Video-Code`, branch `main`.
 - CLI: `director` (package `dex-video-code` v0.1.0), Node.js >=22. In a checkout: `npm run --silent director -- <operation>`; installed use: `director <operation>`.
 - DEX//REACH Refresh is a callable transport only when an authorized node is freshly selected, fingerprinted, reports `aiAccess=on`, and its exact exposed process tool accepts the call. Historical or repository evidence does not prove a live bridge. No native ChatGPT tool is installed by this repository.
 - Workstation and paths are discovered at runtime. GitHub provides source access, not execution. No public HTTP service exists.

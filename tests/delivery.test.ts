@@ -1,0 +1,47 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {createHash} from "node:crypto";
+import {mkdtemp,rm,writeFile,readFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import path from "node:path";
+import {spawnSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
+import {makeJob} from "../src/job.js";
+import {DeliveryError,GoogleDriveDeliveryAdapter,driveConfigFromEnv,type DriveFile,type FetchLike} from "../src/delivery.js";
+
+const folder="folder12345",token="not-a-real-token";
+const hash=(data:Buffer,algorithm:"md5"|"sha256")=>createHash(algorithm).update(data).digest("hex");
+function response(body:unknown,status=200,headers?:HeadersInit){return new Response(body===undefined?null:JSON.stringify(body),{status,headers});}
+async function fixture(options:{folderPublic?:boolean;parent?:string;md5?:string|false;permission?:boolean;uploadFailure?:boolean;rateLimited?:boolean;quota?:boolean}={}){
+  const dir=await mkdtemp(path.join(tmpdir(),"dvc-drive-")),file=path.join(dir,"master.mp4"),bytes=Buffer.from("verified original mp4 fixture");await writeFile(file,bytes);
+  const job=makeJob("Create a 1-second motion graphic showing a transforming circle without text");job.job_id="job-test-123";
+  let uploaded=0,queries=0,put=0,folderCalls=0,initMetadata:any;let remote:DriveFile|undefined;
+  const baseFile=(body:any):DriveFile=>({id:"remoteFile123",name:body.name,mimeType:"video/mp4",parents:[options.parent??folder],size:String(bytes.length),...(options.md5===false?{}:{md5Checksum:options.md5??hash(bytes,"md5")}),webViewLink:"https://drive.google.com/file/d/remoteFile123/view",permissions:options.permission===false?undefined:[{type:"user"}],appProperties:body.appProperties});
+  const fetcher:FetchLike=async(input,init={})=>{
+    const url=String(input),method=init.method??"GET";
+    if(url.includes(`/files/${folder}?`)){folderCalls++;if(options.rateLimited&&folderCalls===1)return response({error:{errors:[{reason:"userRateLimitExceeded"}]}},403);if(options.quota)return response({error:{errors:[{reason:"storageQuotaExceeded"}]}},403);return response({id:folder,mimeType:"application/vnd.google-apps.folder",permissions:options.folderPublic?[{type:"anyone"}]:[{type:"user"}]});}
+    if(url.includes("/files?")&&method==="GET"){queries++;return response({files:remote?[remote]:[]});}
+    if(url.includes("uploadType=resumable")){uploaded++;initMetadata=JSON.parse(String(init.body));return response(undefined,200,{Location:"https://www.googleapis.com/upload/drive/v3/files?upload_id=private-session"});}
+    if(url.includes("upload_id=private-session")&&method==="PUT"){
+      put++;
+      if(options.uploadFailure&&put===1)throw new TypeError("connection reset");
+      if(String(new Headers(init.headers).get("Content-Range")).startsWith("bytes */"))return response(undefined,308);
+      remote=baseFile(initMetadata);return response(remote,201);
+    }
+    if(url.includes("/files/remoteFile123?")){if(!remote&&initMetadata)remote=baseFile(initMetadata);return response(remote??{},200);}
+    throw new Error(`Unexpected fixture request ${method} ${url}`);
+  };
+  const adapter=new GoogleDriveDeliveryAdapter({accessToken:token,folderId:folder},fetcher,async()=>{});
+  return {dir,file,bytes,job,adapter,counts:()=>({uploaded,queries,put}),deliver:()=>adapter.deliver(job,file,hash(bytes,"sha256"),"outputs/master.mp4"),getRemote:()=>remote};
+}
+test("Drive delivery uploads the verified exact master and returns a private verified receipt",async()=>{const f=await fixture();try{const receipt=await f.deliver();assert.equal(receipt.state,"DELIVERED_VERIFIED");assert.equal(receipt.source_sha256,hash(f.bytes,"sha256"));assert.equal(receipt.source_bytes,f.bytes.length);assert.equal(receipt.readback,"drive-md5-checksum");assert.equal(receipt.web_view_link,"https://drive.google.com/file/d/remoteFile123/view");assert.equal(receipt.parent_id,folder);assert.equal(receipt.private,true);assert.equal(receipt.source_path,"outputs/master.mp4");}finally{await rm(f.dir,{recursive:true,force:true});}});
+test("retry after uncertain completed upload reconciles by private idempotency key without duplicate",async()=>{const f=await fixture();try{await f.deliver();const before=f.counts();const again=await f.deliver();assert.equal(again.state,"DELIVERED_VERIFIED");assert.equal(f.counts().uploaded,before.uploaded);assert.equal(f.counts().queries,before.queries+1);}finally{await rm(f.dir,{recursive:true,force:true});}});
+test("interrupted chunk is reconciled with upload status before another chunk is sent",async()=>{const f=await fixture({uploadFailure:true});try{const receipt=await f.deliver();assert.equal(receipt.state,"DELIVERED_VERIFIED");assert.equal(f.counts().put,3);/* interrupted PUT, status query, resumed PUT */}finally{await rm(f.dir,{recursive:true,force:true});}});
+test("changed or stale source bytes are rejected before upload",async()=>{const f=await fixture();try{await assert.rejects(f.adapter.deliver(f.job,f.file,"0".repeat(64)),/changed after verification/);assert.equal(f.counts().uploaded,0);}finally{await rm(f.dir,{recursive:true,force:true});}});
+test("public destination folder fails closed before upload",async()=>{const f=await fixture({folderPublic:true});try{await assert.rejects(f.deliver(),/public link access/);assert.equal(f.counts().uploaded,0);}finally{await rm(f.dir,{recursive:true,force:true});}});
+test("missing comparable provider checksum remains unverified and withholds link",async()=>{const f=await fixture({md5:false});try{const r=await f.deliver();assert.equal(r.state,"DELIVERED_UNVERIFIED");assert.equal(r.web_view_link,undefined);assert.match(r.error??"",/checksum/);}finally{await rm(f.dir,{recursive:true,force:true});}});
+test("wrong destination parent or public file permission prevents success",async()=>{for(const options of [{parent:"wrongFolder123"},{folderPublic:false,permission:false}]){const f=await fixture(options);try{await assert.rejects(f.deliver(),options.parent?/parent does not match/:/permissions/);}finally{await rm(f.dir,{recursive:true,force:true});}}});
+test("provider authorization failure is classified without exposing bearer material",async()=>{const dir=await mkdtemp(path.join(tmpdir(),"dvc-drive-auth-")),file=path.join(dir,"master.mp4"),bytes=Buffer.from("mp4");await writeFile(file,bytes);try{const fetcher:FetchLike=async()=>response({error:"sensitive"},401);const adapter=new GoogleDriveDeliveryAdapter({accessToken:token,folderId:folder},fetcher,async()=>{});await assert.rejects(adapter.deliver(makeJob("Create a 1-second motion graphic showing a transforming circle without text"),file,hash(bytes,"sha256")),(e:unknown)=>e instanceof DeliveryError&&e.state==="BLOCKED_AUTH"&&!e.message.includes(token));}finally{await rm(dir,{recursive:true,force:true});}});
+test("Drive 403 rate limit retries boundedly while storage quota remains a distinct failure",async()=>{const f=await fixture({rateLimited:true});try{assert.equal((await f.deliver()).state,"DELIVERED_VERIFIED");}finally{await rm(f.dir,{recursive:true,force:true});}const quota=await fixture({quota:true});try{await assert.rejects(quota.deliver(),(e:unknown)=>e instanceof DeliveryError&&e.state==="FAILED"&&/quota/.test(e.message));assert.equal(quota.counts().uploaded,0);}finally{await rm(quota.dir,{recursive:true,force:true});}});
+test("Drive config reports missing authorization without revealing values",()=>{assert.throws(()=>driveConfigFromEnv({DEX_DRIVE_FOLDER_ID:folder}),e=>e instanceof DeliveryError&&e.state==="BLOCKED_AUTH"&&!e.message.includes(folder));assert.throws(()=>driveConfigFromEnv({DEX_DRIVE_ACCESS_TOKEN:token}),e=>e instanceof DeliveryError&&e.state==="BLOCKED_AUTH"&&!e.message.includes(token));});
+test("director delivery requires a verified master and persists BLOCKED_AUTH without losing the original",async()=>{const root=await mkdtemp(path.join(tmpdir(),"dvc-deliver-cli-"));try{const cli=fileURLToPath(new URL("../src/cli.js",import.meta.url));const run=(args:string[])=>spawnSync(process.execPath,[cli,...args],{cwd:root,encoding:"utf8",timeout:60000,env:{...process.env,DEX_DRIVE_ACCESS_TOKEN:"",DEX_DRIVE_FOLDER_ID:""}});const manifest=path.join(root,"job.json");await writeFile(manifest,JSON.stringify(makeJob("Create a 1-second motion graphic showing a transforming circle without text")));let r=run(["produce","--job","job.json"]);assert.equal(r.status,0,r.stderr);r=run(["verify","--job","job.json"]);assert.equal(r.status,0,r.stderr);r=run(["visual-samples","--job","job.json"]);assert.equal(r.status,0,r.stderr);const sampleReceipt=JSON.parse(r.stdout);assert.equal(sampleReceipt.state,"PENDING_VISUAL_REVIEW");assert.equal(sampleReceipt.samples.length,3);const job=JSON.parse(await readFile(manifest,"utf8"));const master=path.join(root,job.artifacts[0].path);const before=hash(await readFile(master),"sha256");r=run(["deliver","--job","job.json"]);assert.notEqual(r.status,0);assert.match(r.stderr,/authorization is not configured/);const state=JSON.parse(await readFile(path.join(root,"job-state.json"),"utf8"));assert.equal(state.delivery.state,"BLOCKED_AUTH");assert.equal(state.visual_evidence.state,"PENDING_VISUAL_REVIEW");assert.equal(state.delivery.file_id,undefined);assert.equal(hash(await readFile(master),"sha256"),before);}finally{await rm(root,{recursive:true,force:true});}});

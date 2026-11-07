@@ -2,7 +2,7 @@
 
 Prompt-first, medium-agnostic creative production coordinator. The CLI interprets a brief, records supported and unsupported intent, and only executes a bounded local adapter when the whole plan is eligible. A private GitHub repository is source control; it is not itself a registered ChatGPT tool or a render service.
 
-## Studio V2 — Approved direction, implementation pending
+## Studio V2 — Implementation in progress
 
 The product's full next-generation filmmaking plan is tracked in:
 - [Studio V2 Master Plan](docs/STUDIO_V2_MASTER_PLAN.md) — detailed artistic vision, system design, security, media routes, delivery, business benchmarks and risks.
@@ -10,7 +10,7 @@ The product's full next-generation filmmaking plan is tracked in:
 - [Validation Contract](docs/STUDIO_V2_VALIDATION_CONTRACT.md) — proof standards, negative regression tests, delivery integrity and independent visual review.
 - [Codex Start](docs/STUDIO_V2_CODEX_START.md) — self-contained first implementation handoff.
 
-**Start a fresh coding session at [Codex Start](docs/STUDIO_V2_CODEX_START.md).** P0 baseline and bounded P1 verified master delivery come before full creative/studio expansion. These files are plans, not evidence the proposed capabilities exist. The user experience target is a compelling finished film with a real, validated viewing link and minimal operator intervention. Consult current code and OPERATIONAL_STATE.md for actual working behavior.
+**Use [Codex Start](docs/STUDIO_V2_CODEX_START.md) for the phase gates.** These files describe the plan; consult current code and [OPERATIONAL_STATE.md](OPERATIONAL_STATE.md) for implemented behavior and proof. The bounded P1 Drive adapter is implemented, but a live delivery still requires authorized credentials and destination configuration on the execution host.
 
 ## Verified implementation
 
@@ -21,6 +21,9 @@ The product's full next-generation filmmaking plan is tracked in:
 - Pilot A is an independently authored 20-second HyperFrames motion-design film. It used the existing Big Mac controller through DEX//REACH; that controller is not integrated into `director`. See [`media/pilot-a/README.md`](media/pilot-a/README.md) and the evidence-limited [capability baseline](docs/capability-baseline.md). The MP4 and frame review remain local, ignored outputs.
 - A 30-second animated explainer of the user-supplied Drakken Terraforming Compendium is in [`media/drakken-compendium-explainer/`](media/drakken-compendium-explainer/). It uses locally generated SVG diagrams and FFmpeg, has no audio or subtitles, keeps the 35 historical proposals distinct from approved/documented categories, and labels illustrations as non-canonical evidence. The MP4 and frame proofs are local, ignored outputs; see its receipt and storyboard for sources and limits.
 - Output finalization uses a same-directory temporary encode and atomic create-if-absent linking. State locking prevents concurrent producers. Technical verification checks duration, dimensions, frame rate, streams, codec/container, subtitles, full decode and manifest SHA-256. Artistic review remains human and pending.
+- Optional `director deliver --job <manifest>` re-verifies the original MP4, then uploads it as a resumable binary to the configured private Google Drive folder. It never grants link-sharing permissions. The receipt and state are saved in the job's ignored `job-state.json`; only Drive checksum, exact parent/privacy metadata and a usable viewing link produce `DELIVERED_VERIFIED`. Configure `DEX_DRIVE_ACCESS_TOKEN` and `DEX_DRIVE_FOLDER_ID` on the execution host. Missing authorization is reported as `BLOCKED_AUTH`; no live delivery is implied by tests.
+- An opt-in `continuous_circle_square_v1` geometry mode renders a continuous circle-to-square contour with fixed centroid, staged timing and a held final square; old manifests retain their prior rendering. `visual-samples` extracts hashed frames only after a verified master and records pending review without claiming human approval.
+- `doctor` and planning expose an evidence-backed capability registry and typed creative contract. `verify-assets --job ... --assets ...` checks local asset hashes and confines paths; its receipt does not establish rights, consent or production admission. HyperFrames, narrative/illustrated production, commercial practical filmmaking and articulated 3D remain unproven or blocked as documented in the operational state.
 - Production stayed on the authorized local hosts; no public upload, cloud call, model install or additional spend occurred. ComfyUI is excluded.
 
 Requires Node.js 22+, FFmpeg/ffprobe, and an SVG rasterizer (`sips` on macOS; `magick` elsewhere) for rendering and media verification.

@@ -1,5 +1,15 @@
 # Operational state
 
+## Temporal Precision v1 — isolated additive integration — 2026-11-12 — PARTIAL
+
+- Source baseline: `main` at `1d77fb82f12d341cdc1945e94dfe2285e2b30b0b`. Implementation branch `feature/temporal-precision-v1-20261112`; no edits to DEX//REACH or other repositories.
+- Added `src/temporal-precision.ts`, `tests/temporal-precision.test.ts`, and `docs/TEMPORAL_PRECISION_V1.md`. The Director CLI exposes `temporal resolve` and `temporal apply` as a separate operation. Existing CreativeJob 1.1 schema, `produce` route admission, geometric renderer, Studio workflow, Google Drive delivery, and subtitle defaults remain unchanged.
+- The resolver maps externally supplied, source-SHA-bound forced-alignment word-end times to a declared frame. It fails closed on malformed contracts, invalid frame timing, absent word occurrences, mismatched source linkage, extra fields, unsafe paths, missing property locks, and enabled captions. Declared alignment is **not independently validated against actual speech**; input claims can be forged, so real spoken-word detection/verification remains pending.
+- The narrowly admitted renderer accepts one-stream H.264 plus one AAC audio stream in an MP4 (no extras), constant frame rate and source hash match; FFmpeg applies contrast/brightness starting at the resolved frame. A new MP4 is create-if-absent, source bytes are rechecked, decoded source/output audio hashes are compared, full output decode and frame/dimension/stream checks run. A lighting filter does not establish perfect pre-trigger pixel identity, untouched camera/identity/geometry, or artistic acceptance; these remain unverified.
+- Isolated local TypeScript build and 9/9 resolver tests passed. A synthetic 5-second 24 fps source exercised the full edit path, yielded frame 61 for a declared 2.51s end, preserved decoded audio SHA-256 and matched declared stream/frame structure. Existing output was not overwritten on retry. These are **fixture-level and local adapter tests**, not an end-to-end speech-trigger production proof.
+- Full repository `npm test`, build, and workflow validation are **UNVERIFIED** because the execution environment had no working network clone to access the repository dependencies/files. This branch has not been merged into `main`, published, or approved for production use. No speech model, external service, private media, Drive upload, subtitles, or spend was used. Human visual review remains pending.
+
+
 ## Completion recovery — P3 worker contract and P8 local workflow — 2026-11-07
 
 - Baseline for this pass: `main` at `0f42d82de5974189eb22e4359c24bd7e9489fb29`, clean before edits. The existing worktree contains the Director and locally verified films; no original film or production file was changed.

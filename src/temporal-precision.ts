@@ -1,7 +1,7 @@
 /** A separately admitted, narrow temporal edit. Never elevates a CreativeJob route. */
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { link, mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { link, lstat, mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { assertNoSymlinks } from "./paths.js";
@@ -78,9 +78,23 @@ function command(bin:string,args:string[],maxMs=30000):string {
   if(r.error||r.status!==0)throw new Error(`${bin} failed: ${String(r.error??r.stderr).slice(0,800)}`);
   return r.stdout;
 }
-type Stream = {codec_type:string;codec_name:string;width?:number;height?:number;r_frame_rate?:string;avg_frame_rate?:string;nb_read_frames?:string};
+type Stream = {codec_type:string;codec_name:string;width?:number;height?:number;r_frame_rate?:string;avg_frame_rate?:string;nb_read_frames?:string;start_time?:string;duration?:string};
 function probe(file:string):{streams:Stream[];format:{duration?:string;format_name?:string}}{
-  return JSON.parse(command("ffprobe",["-v","error","-count_frames","-show_entries","stream=codec_type,codec_name,width,height,r_frame_rate,avg_frame_rate,nb_read_frames:format=duration,format_name","-of","json",file],30000));
+  return JSON.parse(command("ffprobe",["-v","error","-count_frames","-show_entries","stream=codec_type,codec_name,width,height,r_frame_rate,avg_frame_rate,nb_read_frames,start_time,duration:format=duration,format_name","-of","json",file],30000));
+}
+/** The word times and decoded frame timestamps must share an absolute zero-based origin. */
+function assertZeroTimelineOrigin(stream:Stream,kind:string):void {
+  const start=Number(stream.start_time);
+  if(!stream.start_time || !Number.isFinite(start) || Math.abs(start)>0.001) throw new Error(`Unverified ${kind} start time; audio and video must start at zero`);
+}
+/** r_frame_rate and avg_frame_rate alone cannot establish a truly contiguous CFR sequence. */
+function assertFrameTimeline(file:string,fps:number,expectedCount:number):void {
+  const evidence=JSON.parse(command("ffprobe",["-v","error","-select_streams","v:0","-show_frames","-show_entries","frame=best_effort_timestamp_time","-of","json",file],30000)) as {frames?:{best_effort_timestamp_time?:string}[]};
+  if(!Array.isArray(evidence.frames)||evidence.frames.length!==expectedCount) throw new Error("Video frame-timestamp count does not match the contract");
+  for(let i=0;i<expectedCount;i++){
+    const observed=Number(evidence.frames[i]?.best_effort_timestamp_time);
+    if(!Number.isFinite(observed)||Math.abs(observed-i/fps)>0.001) throw new Error(`Non-contiguous or shifted video timestamp at frame ${i}`);
+  }
 }
 function audioHash(file:string):string {
   const result=command("ffmpeg",["-nostdin","-v","error","-i",file,"-map","0:a:0","-vn","-c:a","pcm_s16le","-f","hash","-hash","SHA256","-"],30000);
@@ -101,12 +115,19 @@ export async function runTemporalPrecision(root:string,args:string[]):Promise<un
   await assertNoSymlinks(root,c.source.path);await assertNoSymlinks(root,c.output_path);
   if(input===output)throw new Error("Cannot overwrite source");
   if(!input.toLowerCase().endsWith(".mp4") || !output.toLowerCase().endsWith(".mp4"))throw new Error("Temporal adapter requires MP4 paths");
-  if((await stat(input)).size<100)throw new Error("Source is empty or invalid");
+  const size=(await stat(input)).size;
+  if(size<100||size>256*1024*1024)throw new Error("Source is empty or exceeds the 256 MiB bounded adapter limit");
+  try{await lstat(output);throw new Error("Output already exists; refusing an edit or overwrite");}catch(e){if((e as NodeJS.ErrnoException).code!=="ENOENT")throw e;}
   if(await fileSha256(input)!==c.source.sha256)throw new Error("Source SHA-256 differs from alignment-bound contract");
   const before=probe(input),vs=before.streams.filter(s=>s.codec_type==="video"),as=before.streams.filter(s=>s.codec_type==="audio");
   if(before.streams.length!==2 || vs.length!==1 || as.length!==1 || vs[0]!.codec_name!=="h264" || !["aac"].includes(as[0]!.codec_name) || !before.format.format_name?.includes("mp4"))throw new Error("Only source MP4 with one H.264 video and one AAC audio stream is admitted");
   const fps=`${c.timing.fps_numerator}/${c.timing.fps_denominator}`;
   if(vs[0]!.r_frame_rate!==fps || vs[0]!.avg_frame_rate!==fps || Number(vs[0]!.nb_read_frames)!==c.timing.duration_frames)throw new Error("Source frame count or CFR timebase disagrees with contract");
+  if(!vs[0]!.width||!vs[0]!.height||vs[0]!.width>1920||vs[0]!.height>1080)throw new Error("Temporal adapter supports source frames up to 1920x1080");
+  assertZeroTimelineOrigin(vs[0]!,"video");
+  assertZeroTimelineOrigin(as[0]!,"audio");
+  if(!Number.isFinite(Number(as[0]!.duration))||Number(as[0]!.duration)+0.001<result.trigger_end_seconds)throw new Error("Spoken-word trigger exceeds the audio stream duration");
+  assertFrameTimeline(input,c.timing.fps_numerator/c.timing.fps_denominator,c.timing.duration_frames);
   const originalAudio=audioHash(input);
   const tempDir=await mkdtemp(path.join(path.dirname(output),".temporal-"));
   const temp=path.join(tempDir,"candidate.mp4");
@@ -117,6 +138,11 @@ export async function runTemporalPrecision(root:string,args:string[]):Promise<un
     command("ffmpeg",["-nostdin","-hide_banner","-loglevel","error","-i",input,"-map","0:v:0","-map","0:a:0","-vf",filter,"-c:v","libx264","-preset","medium","-crf","18","-bf","0","-pix_fmt","yuv420p","-c:a","copy","-sn","-dn","-movflags","+faststart","-f","mp4",temp],60000);
     const after=probe(temp),outV=after.streams.filter(s=>s.codec_type==="video");
     if(after.streams.length!==2 || outV.length!==1 || after.streams.filter(s=>s.codec_type==="audio").length!==1 || outV[0]!.r_frame_rate!==fps || outV[0]!.avg_frame_rate!==fps || Number(outV[0]!.nb_read_frames)!==c.timing.duration_frames || outV[0]!.width!==vs[0]!.width || outV[0]!.height!==vs[0]!.height)throw new Error("Output frame, geometry or stream verification failed");
+    const outA=after.streams.filter(s=>s.codec_type==="audio")[0]!;
+    if(outV[0]!.codec_name!=="h264"||outA.codec_name!=="aac")throw new Error("Unexpected output codec");
+    assertZeroTimelineOrigin(outV[0]!,"output video");
+    assertZeroTimelineOrigin(outA,"output audio");
+    assertFrameTimeline(temp,c.timing.fps_numerator/c.timing.fps_denominator,c.timing.duration_frames);
     if(audioHash(temp)!==originalAudio)throw new Error("Decoded audio differs; output rejected");
     command("ffmpeg",["-nostdin","-v","error","-i",temp,"-f","null","-"],30000);
     if(await fileSha256(input)!==c.source.sha256)throw new Error("Source changed during production");

@@ -56,10 +56,10 @@ The supplied alignment words are **external claims**, not a built-in speech reco
 
 ## Narrow admission and validation
 
-- Source must be MP4 with exactly one constant-frame-rate H.264 video stream and one AAC audio stream; 1–120 fps, up to 30 seconds. No subtitles or extra streams.
+- Source must be MP4 with exactly one constant-frame-rate H.264 video stream and one AAC audio stream; 1–120 fps, up to 30 seconds, at most 1920×1080 and at most 256 MiB. No subtitles or extra streams. Audio and video must both start at zero. The adapter checks the actual video frame timestamps against the declared rational frame rate and refuses shifted, dropped or irregular frame timing.
 - Edit begins at `ceil(word_end_seconds * fps)`, the first frame at or after the stated word end. There is no inferred timestamp fallback.
 - Frame-indexed FFmpeg `eq` adjusts contrast and brightness after the boundary; it does not crop, scale, move the camera, synthesize characters, insert words, or manipulate audio.
-- The output is a newly encoded H.264/AAC MP4 with source AAC stream copied. Before finalization, it must pass full decoding, matching frame count/frame rate/dimensions, no added streams, decoded audio hash equality, and unchanged source file hash.
+- The output is a newly encoded H.264/AAC MP4 with source AAC stream copied. Before finalization, it must pass full decoding, matching frame count/frame rate/dimensions and every video frame timestamp, zero-based audio/video start, no added streams, decoded audio hash equality, and unchanged source file hash. Existing output paths are refused before rendering and remain protected by create-if-absent linking.
 - Re-encoding can alter pixel values outside the lighting edit. **Exact pixel identity or unchanged camera/geometry/character content is not proven** merely by those checks. Visual approval remains separate.
 - The alignment claim and actual visual condition must be independently reviewed before describing the job as artistically verified.
 - Neither resolving nor applying performs network operations, cloud uploads, voice generation, external payments, or Drive delivery.
@@ -69,3 +69,9 @@ The supplied alignment words are **external claims**, not a built-in speech reco
 The isolated module and tests passed a local TypeScript build and 9/9 targeted tests. A synthetic five-second source MP4 produced a new output at declared frame 61; frame count/dimensions and decoded audio hash matched. This was a **synthetic aligned-word fixture**, not detected speech. Re-applying to an existing output was refused. No complete repository checkout was available in the isolated test environment, so **the full repository build/test suite is unverified**. Human visual review is pending.
 
 Do not conflate these tests with production speech recognition, exact pixel preservation, source-identity guarantees, or artistic approval.
+
+## Additional bounded regressions — 2026-11-13
+
+An isolated Node 22 harness reproduced a concrete failure: a five-second video with its AAC audio starting about 0.48 seconds after the video was previously accepted, despite the temporal word evidence depending on synchronized audio/video origin. A new zero-start check now refuses this input. Frame-by-frame PTS checks, input resolution and byte-size limits, and early existing-output refusal were added to reduce wrong-time and excessive-work risks. The added synthetic-media regression suite passed **12/12**, comprising nine resolver tests and three actual FFmpeg-driven tests (on-frame edit, delayed audio rejection and stale source-hash rejection). With a five-second fixture, the first edited frame was 61; sampled decoded frames before the boundary showed minor re-encoding differences, while frame 61 showed a substantial contrast difference. **Exact pre-trigger pixel preservation remains unproven and is not promised.**
+
+The isolated harness used test-only stand-ins for unchanged project path utilities; the full repository build and test suite were **not** run. There was no real word recognition or authenticated alignment receipt, no real-user video, and no human artistic approval. The PR must remain draft until the native suite and the production-evidence gates pass.

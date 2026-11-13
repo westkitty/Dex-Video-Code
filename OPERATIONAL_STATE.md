@@ -1,5 +1,13 @@
 # Operational state
 
+## Temporal Precision synchronization hardening — 2026-11-13 — PARTIAL
+
+- Continued the isolated draft PR #1 on `feature/temporal-precision-v1-20261112` without touching `main`, DEX//REACH or other repositories. New source checks refuse nonzero video or audio start timestamps, check every decoded video presentation timestamp against the declared rational FPS, reject clips above 1920×1080 or 256 MiB, and reject an existing output before encoding.
+- A synthetic 5-second H.264/AAC clip with audio delayed by about 0.48 seconds was accepted by the original adapter and exposed a confirmed synchronization gap. After hardening, this same test refuses execution with an audio-start error; a normal zero-start synthetic clip still renders and retains matching decoded audio. Source/output sampled frames show a large visual luminance/contrast difference beginning at frame 61 after the declared 2.51s word end; earlier frames have small encoding differences and are not pixel-identical.
+- The focused isolated Node 22 harness passed 12/12 tests: 9 existing resolver assertions and 3 new actual FFmpeg-media tests (expected edit frame with decoded audio preservation and overwrite refusal, delayed audio refusal, stale source hash refusal). The test harness used stand-ins for unchanged project path functions. The full native repository `npm test` and complete integration/CLI build remain **UNVERIFIED** because this execution environment could not obtain the full repo/dependencies. Real forced alignment is still externally asserted and unauthenticated; artistic review remains pending.
+- Scope restrictions remain: geometric Director `produce` is unchanged; temporal media is capped at 30s, one H.264 video + one AAC audio stream, input zero-timebase, frame-contiguous CFR, 1920×1080 and 256 MiB. There was no production voice detection, real-user source media, private upload, additional spend, merge, public release or deployment.
+
+
 ## Temporal Precision experimental integration — 2026-11-13 — PARTIAL
 
 - Baseline: `main` at `1d77fb82f12d341cdc1945e94dfe2285e2b30b0b`. This is isolated on `feature/temporal-precision-v1-20261112`; no DEX//REACH repository or machine was used as a source of truth or modified.

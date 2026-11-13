@@ -1,5 +1,14 @@
 # Operational state
 
+## Temporal Precision experimental integration — 2026-11-13 — PARTIAL
+
+- Baseline: `main` at `1d77fb82f12d341cdc1945e94dfe2285e2b30b0b`. This is isolated on `feature/temporal-precision-v1-20261112`; no DEX//REACH repository or machine was used as a source of truth or modified.
+- Added standalone `director temporal resolve|apply --contract <relative.json>` path with typed source-bound alignment contract, frame-accurate activation, only high-contrast FFmpeg lighting adjustment, six protected-property declarations, captions off, relative-path/symlink checks, source hash validation, restricted H.264/AAC MP4 streams, frame count/timebase checks, decoded audio hash comparison, full output decode and create-if-absent output. Existing CreativeJob, route admission and `produce` are not changed.
+- Validation in a local isolated Node 22/TypeScript harness using stubbed unchanged project path functions: 9/9 focused resolver tests passed. An actual synthetic 5-second 24 fps H.264/AAC MP4 accepted a fixture timing claim at 2.51 s and emitted a new encoded output with edit starting frame 61; decoded audio hashes matched. Rerunning with the output path already occupied was refused with EEXIST. This synthetic signal contains no spoken word and does NOT establish genuine speech detection.
+- Current limitations: forced-alignment metadata is externally asserted, not independently authenticated or produced; renderer applies tonal contrast rather than scene-aware relighting; preservation of geometry, camera and identity has not been independently pixel/feature-proven; full repository `npm test` was not run because no authorized runnable repository checkout was accessible from the direct GitHub connector. No real-user source video, speech recognition, artistic acceptance, Drive delivery or publication was performed.
+- Scope remains experimental/PARTIAL. Do not elevate the general video route or report end-to-end Temporal Precision production complete until a real source, alignment provenance, full native repository suite and visual review pass. No expenses, credentials, private source uploads or alteration of previous artifacts.
+
+
 ## Temporal Precision v1 — isolated additive integration — 2026-11-12 — PARTIAL
 
 - Source baseline: `main` at `1d77fb82f12d341cdc1945e94dfe2285e2b30b0b`. Implementation branch `feature/temporal-precision-v1-20261112`; no edits to DEX//REACH or other repositories.

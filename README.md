@@ -81,3 +81,13 @@ source path. Python 3, OpenSSH `ssh`/`scp`, and an existing known-host entry are
 required.
 
 Run the focused helper regressions with `python3 tests/test_transfer_verified_file.py`.
+
+## Temporal Precision (experimental, separate from CreativeJob admission)
+
+The `director temporal` command supports a narrowly scoped, source-bound lighting edit on an existing MP4. This **does not** enable general video editing through `director produce`, transcribe speech, or authorize an arbitrary renderer. It requires a local H.264 MP4 with one AAC audio stream, constant frame rate, declared source SHA-256 and rights, and external word-level forced-alignment metadata tied to that source hash. It never uploads source media. Caption tracks are not produced.
+
+1. Write a `temporal-precision.v1` JSON contract with `source.path`, `source.sha256`, `source.rights: "authorized"`, `alignment` (source hash, `method: "forced_alignment"`, engine, evidence locator and ordered word timestamps), `timing` (rational FPS and exact frame count), `edit` (spoken word and occurrence, only `high_contrast_lighting`, allowed `luminance` and `contrast`, all six protected locks and zero transition frames), `output_path` and `captions: "off"`. All paths are relative to the project workspace and may not contain symlinks.
+2. `npm run --silent director -- temporal resolve --contract <relative-contract.json>` checks contract consistency and resolves the first frame at or after the selected word's observed end.
+3. `npm run --silent director -- temporal apply --contract <relative-contract.json>` validates source bytes and streams, applies the frame-indexed FFmpeg lighting filter, copies AAC audio, verifies decoded audio and frame count, and creates the output without replacement.
+
+**Proof boundary:** Timing metadata is supplied externally; checking its source hash and declared method does **not** prove that an aligner actually observed the word. The filter is deterministic on admitted footage but identity, exact camera/geometry continuity and artistic quality require separate review. Do not present either `resolve` or `apply` as verified automatic speech recognition. An ordinary CreatorJob remains subject to its original admission guardrails. Inputs with missing evidence, unsupported formats, or invalid protection locks fail closed. The scope is limited to a single lighting edit; automatic word detection and validated general-purpose lighting relighting are not implemented.

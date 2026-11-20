@@ -89,6 +89,7 @@ if os.path.lexists(target_file):
         if len(hdr) >= 12 and hdr[:4] == b"glTF":
             ver,length=struct.unpack_from("<II",hdr,4)
             if ver == 2 and length == exp_bytes and h.hexdigest() == exp_sha:
+                os.utime(target_file,None)
                 print(json.dumps({"exists":True,"bytes":exp_bytes,"sha256":exp_sha,"free_gib":round(free_gib,3)}))
                 raise SystemExit(0)
     raise SystemExit(f"Staged target mismatch or conflict at {target_file}")
@@ -97,6 +98,8 @@ print(json.dumps({"exists":False,"free_gib":round(free_gib,3)}))
 
 REMOTE_VERIFY_PROMOTE = r"""import hashlib,json,os,shutil,stat,struct,sys
 part_path,final_path,exp_bytes_s,exp_sha=sys.argv[1:5]
+staging_root=sys.argv[5] if len(sys.argv) > 5 else os.path.dirname(os.path.dirname(final_path))
+max_cache_mb=int(sys.argv[6]) if len(sys.argv) > 6 else 512
 exp_bytes=int(exp_bytes_s)
 exp_sha=exp_sha.lower()
 if not os.path.isfile(part_path) or stat.S_ISLNK(os.lstat(part_path).st_mode):
@@ -125,8 +128,35 @@ if ver != 2 or length != exp_bytes:
     raise SystemExit("Staged GLB v2 header verification failed")
 os.chmod(part_path,0o644)
 os.replace(part_path,final_path)
+os.utime(final_path,None)
+evicted_files=0
+evicted_bytes=0
+if max_cache_mb > 0 and os.path.isdir(staging_root):
+    cap=max_cache_mb*1024*1024
+    items=[]
+    total=0
+    for root,dirs,files in os.walk(staging_root,followlinks=False):
+        dirs[:]=[d for d in dirs if not stat.S_ISLNK(os.lstat(os.path.join(root,d)).st_mode)]
+        for fn in files:
+            if not fn.lower().endswith(".glb"):
+                continue
+            fp=os.path.join(root,fn)
+            fst=os.lstat(fp)
+            if stat.S_ISLNK(fst.st_mode) or not stat.S_ISREG(fst.st_mode):
+                continue
+            total += fst.st_size
+            if fp != final_path:
+                items.append((fst.st_mtime,fst.st_size,fp))
+    items.sort()
+    for _,sz,fp in items:
+        if total <= cap:
+            break
+        os.unlink(fp)
+        total -= sz
+        evicted_bytes += sz
+        evicted_files += 1
 free_gib=shutil.disk_usage("/").free/(1024**3)
-print(json.dumps({"bytes":exp_bytes,"sha256":digest,"free_gib":round(free_gib,3)}))
+print(json.dumps({"bytes":exp_bytes,"sha256":digest,"free_gib":round(free_gib,3),"evicted_files":evicted_files,"evicted_bytes":evicted_bytes}))
 """
 
 REMOTE_PRUNE_CACHE = r"""import json,os,shutil,stat,sys
@@ -998,7 +1028,14 @@ def stage_to_remote(
             verified = _ssh_python(
                 host,
                 REMOTE_VERIFY_PROMOTE,
-                [remote_part, remote_path, str(expected_bytes), expected_sha],
+                [
+                    remote_part,
+                    remote_path,
+                    str(expected_bytes),
+                    expected_sha,
+                    staging_root,
+                    str(int(cfg.get("max_remote_cache_mb", 512))),
+                ],
             )
         except Exception:
             subprocess.run(
@@ -1018,6 +1055,8 @@ def stage_to_remote(
             "bytes": verified["bytes"],
             "sha256": verified["sha256"],
             "remote_free_gib": verified.get("free_gib"),
+            "evicted_files": verified.get("evicted_files", 0),
+            "evicted_bytes": verified.get("evicted_bytes", 0),
         },
     }
 
@@ -1045,6 +1084,7 @@ def build_blender_import_script(
     scale: float,
     clear_scene: bool,
     save_blend: str | None,
+    ground_on_z0: bool = False,
 ) -> str:
     """Build a Blender 5.2+ MCP script that imports a GLB while excluding bone-shape helper meshes."""
     col_name = (collection_name or f"Catalog_{tag}")[:62]
@@ -1077,7 +1117,10 @@ if {bool(clear_scene)!r}:
 
 before_objs = set(bpy.data.objects)
 before_actions = set(bpy.data.actions)
-bpy.ops.import_scene.gltf(filepath={remote_path!r})
+gltf_kwargs = {{"filepath": {remote_path!r}}}
+if "disable_bone_shape" in bpy.ops.import_scene.gltf.get_rna_type().properties:
+    gltf_kwargs["disable_bone_shape"] = True
+bpy.ops.import_scene.gltf(**gltf_kwargs)
 helper_objs = set()
 for o in bpy.data.objects:
     if o.type == "ARMATURE" and o.pose:
@@ -1121,26 +1164,33 @@ root_empty.rotation_euler = tuple(math.radians(a) for a in {tuple(rotation_deg)!
 root_empty.scale = ({float(scale)!r}, {float(scale)!r}, {float(scale)!r})
 bpy.context.view_layer.update()
 
-mins = [float("inf"), float("inf"), float("inf")]
-maxs = [float("-inf"), float("-inf"), float("-inf")]
-mesh_count = 0
-armatures = []
-for obj in new_objs:
-    if obj.type == "MESH":
-        mesh_count += 1
-        for corner in obj.bound_box:
-            wc = obj.matrix_world @ Vector(corner)
-            for idx in range(3):
-                mins[idx] = min(mins[idx], wc[idx])
-                maxs[idx] = max(maxs[idx], wc[idx])
-    elif obj.type == "ARMATURE":
-        armatures.append({{"name": obj.name, "bones": len(obj.data.bones)}})
+def _compute_world_bbox():
+    mins = [float("inf"), float("inf"), float("inf")]
+    maxs = [float("-inf"), float("-inf"), float("-inf")]
+    cnt = 0
+    arms = []
+    for obj in new_objs:
+        if obj.type == "MESH":
+            cnt += 1
+            for corner in obj.bound_box:
+                wc = obj.matrix_world @ Vector(corner)
+                for idx in range(3):
+                    mins[idx] = min(mins[idx], wc[idx])
+                    maxs[idx] = max(maxs[idx], wc[idx])
+        elif obj.type == "ARMATURE":
+            arms.append({{"name": obj.name, "bones": len(obj.data.bones)}})
+    bb = None if cnt == 0 else {{
+        "min": [round(v, 4) for v in mins],
+        "max": [round(v, 4) for v in maxs],
+        "size": [round(maxs[i] - mins[i], 4) for i in range(3)],
+    }}
+    return cnt, arms, bb
 
-bbox = None if mesh_count == 0 else {{
-    "min": [round(v, 4) for v in mins],
-    "max": [round(v, 4) for v in maxs],
-    "size": [round(maxs[i] - mins[i], 4) for i in range(3)],
-}}
+mesh_count, armatures, bbox = _compute_world_bbox()
+if {bool(ground_on_z0)!r} and bbox is not None:
+    root_empty.location.z -= bbox["min"][2]
+    bpy.context.view_layer.update()
+    mesh_count, armatures, bbox = _compute_world_bbox()
 
 saved_blend = None
 if {save_blend!r}:
@@ -1156,7 +1206,282 @@ print("CATALOG_IMPORT_JSON:" + json.dumps({{
     "mesh_count": mesh_count,
     "armatures": armatures,
     "new_actions": new_actions,
+    "grounded_on_z0": {bool(ground_on_z0)!r},
     "world_bbox": bbox,
+    "saved_blend": saved_blend,
+}}))
+"""
+
+
+def build_attach_prop_script(
+    *,
+    remote_path: str,
+    tag: str,
+    target_armature: str,
+    bone_name: str,
+    offset: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    rotation_deg: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    scale: float = 1.0,
+    gltf_bone_align: bool = True,
+    save_blend: str | None = None,
+) -> str:
+    """Build a Blender 5.2+ MCP script that attaches a prop GLB to an armature bone socket."""
+    col_name = f"Prop_{tag}"[:62]
+    root_name = f"PropRoot_{tag}"[:62]
+    return f"""
+import json, math, os
+import bpy
+from mathutils import Matrix, Vector
+
+arm = bpy.data.objects.get({target_armature!r})
+if arm is None or arm.type != "ARMATURE":
+    raise ValueError(f"Target armature not found or not an ARMATURE: {target_armature!r}")
+
+resolved_bone = None
+if {bone_name!r} in arm.data.bones:
+    resolved_bone = {bone_name!r}
+else:
+    target_lower = {bone_name!r}.lower()
+    for b in arm.data.bones:
+        if b.name.lower() == target_lower:
+            resolved_bone = b.name
+            break
+if resolved_bone is None:
+    raise ValueError(f"Bone {bone_name!r} not found in {{arm.name}}. Available: {{[b.name for b in arm.data.bones]}}")
+
+before_objs = set(bpy.data.objects)
+gltf_kwargs = {{"filepath": {remote_path!r}}}
+if "disable_bone_shape" in bpy.ops.import_scene.gltf.get_rna_type().properties:
+    gltf_kwargs["disable_bone_shape"] = True
+bpy.ops.import_scene.gltf(**gltf_kwargs)
+helper_objs = set()
+for o in bpy.data.objects:
+    if o.type == "ARMATURE" and o.pose:
+        for pb in o.pose.bones:
+            if pb.custom_shape is not None:
+                helper_objs.add(pb.custom_shape)
+for col in bpy.data.collections:
+    if col.name.startswith("glTF_not_exported"):
+        helper_objs.update(col.objects)
+new_objs = [o for o in bpy.data.objects if o not in before_objs and o not in helper_objs]
+new_obj_set = set(new_objs)
+
+target_col = bpy.data.collections.get({col_name!r})
+if target_col is None:
+    target_col = bpy.data.collections.new({col_name!r})
+    bpy.context.scene.collection.children.link(target_col)
+for obj in new_objs:
+    if obj.name not in target_col.objects:
+        target_col.objects.link(obj)
+    for col in list(obj.users_collection):
+        if col != target_col:
+            col.objects.unlink(obj)
+
+prop_root = bpy.data.objects.new({root_name!r}, None)
+prop_root.empty_display_type = "PLAIN_AXES"
+prop_root.empty_display_size = 0.15
+target_col.objects.link(prop_root)
+
+roots = [o for o in new_objs if o.parent is None or o.parent not in new_obj_set]
+for r in roots:
+    r.parent = prop_root
+
+bone_len = arm.data.bones[resolved_bone].length
+prop_root.parent = arm
+prop_root.parent_type = "BONE"
+prop_root.parent_bone = resolved_bone
+align = Matrix.Rotation(-math.pi * 0.5, 4, "X") if {bool(gltf_bone_align)!r} else Matrix.Identity(4)
+prop_root.matrix_parent_inverse = Matrix.Translation((0.0, -bone_len, 0.0)) @ align
+prop_root.location = {tuple(offset)!r}
+prop_root.rotation_mode = "XYZ"
+prop_root.rotation_euler = tuple(math.radians(a) for a in {tuple(rotation_deg)!r})
+prop_root.scale = ({float(scale)!r}, {float(scale)!r}, {float(scale)!r})
+bpy.context.view_layer.update()
+
+socket_world = arm.matrix_world @ arm.pose.bones[resolved_bone].head
+socket_distance_m = round((prop_root.matrix_world.translation - socket_world).length, 6)
+mesh_count = sum(1 for o in new_objs if o.type == "MESH")
+
+saved_blend = None
+if {save_blend!r}:
+    save_path = {save_blend!r}
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=save_path)
+    saved_blend = save_path
+
+print("CATALOG_ATTACH_JSON:" + json.dumps({{
+    "target_armature": arm.name,
+    "bone_name": resolved_bone,
+    "collection": target_col.name,
+    "prop_root": prop_root.name,
+    "imported_object_count": len(new_objs),
+    "mesh_count": mesh_count,
+    "socket_world": [round(float(v), 4) for v in socket_world],
+    "prop_world": [round(float(v), 4) for v in prop_root.matrix_world.translation],
+    "socket_distance_m": socket_distance_m,
+    "gltf_bone_align": {bool(gltf_bone_align)!r},
+    "saved_blend": saved_blend,
+}}))
+"""
+
+
+def build_bind_animation_script(
+    *,
+    remote_path: str | None,
+    target_armature: str,
+    clip_query: str | None = None,
+    frame: int | None = None,
+    set_frame_range: bool = True,
+    save_blend: str | None = None,
+) -> str:
+    """Build a Blender 5.2+ MCP script that binds a slotted Action and measures mesh deformation."""
+    return f"""
+import json, os
+import bpy
+
+arm = bpy.data.objects.get({target_armature!r})
+if arm is None or arm.type != "ARMATURE":
+    raise ValueError(f"Target armature not found or not an ARMATURE: {target_armature!r}")
+
+def _descendant_meshes(root_obj):
+    out = []
+    for o in bpy.data.objects:
+        if o.type != "MESH":
+            continue
+        cur = o.parent
+        while cur is not None:
+            if cur == root_obj:
+                out.append(o)
+                break
+            cur = cur.parent
+    return out
+
+skinned_meshes = _descendant_meshes(arm)
+candidate_actions = []
+if {remote_path!r}:
+    before_objs = set(bpy.data.objects)
+    before_actions = set(bpy.data.actions)
+    before_meshes = set(bpy.data.meshes)
+    before_armatures = set(bpy.data.armatures)
+    before_materials = set(bpy.data.materials)
+    before_cols = set(bpy.data.collections)
+    gltf_kwargs = {{"filepath": {remote_path!r}}}
+    if "disable_bone_shape" in bpy.ops.import_scene.gltf.get_rna_type().properties:
+        gltf_kwargs["disable_bone_shape"] = True
+    bpy.ops.import_scene.gltf(**gltf_kwargs)
+    candidate_actions = [a for a in bpy.data.actions if a not in before_actions]
+    for o in list(bpy.data.objects):
+        if o not in before_objs:
+            bpy.data.objects.remove(o, do_unlink=True)
+    for col in list(bpy.data.collections):
+        if col not in before_cols and col.users == 0:
+            bpy.data.collections.remove(col)
+    for coll, prev in (
+        (bpy.data.meshes, before_meshes),
+        (bpy.data.armatures, before_armatures),
+        (bpy.data.materials, before_materials),
+    ):
+        for db in list(coll):
+            if db not in prev and db.users == 0:
+                coll.remove(db)
+else:
+    candidate_actions = list(bpy.data.actions)
+
+if not candidate_actions:
+    raise ValueError("No animation actions found to bind")
+
+chosen = None
+q = ({clip_query!r} or "").strip().lower()
+if q:
+    for a in candidate_actions:
+        if a.name.lower() == q:
+            chosen = a
+            break
+    if chosen is None:
+        for a in candidate_actions:
+            if q in a.name.lower():
+                chosen = a
+                break
+    if chosen is None:
+        raise ValueError(f"Clip matching {{q!r}} not found. Available: {{[a.name for a in candidate_actions]}}")
+else:
+    for a in candidate_actions:
+        if "t-pose" not in a.name.lower():
+            chosen = a
+            break
+    if chosen is None:
+        chosen = candidate_actions[0]
+
+available_clips = sorted(a.name for a in candidate_actions)
+if {remote_path!r}:
+    for a in candidate_actions:
+        if a != chosen:
+            a.use_fake_user = False
+            if a.users == 0:
+                bpy.data.actions.remove(a)
+
+ad = arm.animation_data or arm.animation_data_create()
+ad.action = chosen
+assigned_slot = None
+if hasattr(chosen, "slots") and hasattr(ad, "action_slot"):
+    obj_slots = [s for s in chosen.slots if getattr(s, "target_id_type", None) == "OBJECT"]
+    if obj_slots:
+        ad.action_slot = obj_slots[0]
+        assigned_slot = obj_slots[0].identifier
+
+f_start = int(round(chosen.frame_range[0]))
+f_end = int(round(chosen.frame_range[1]))
+if f_end <= f_start:
+    f_end = f_start + 1
+if {bool(set_frame_range)!r}:
+    bpy.context.scene.frame_start = f_start
+    bpy.context.scene.frame_end = f_end
+
+def _sample_positions(frame_num):
+    bpy.context.scene.frame_set(frame_num)
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    pts = []
+    for m in skinned_meshes:
+        eval_obj = m.evaluated_get(deps)
+        mesh_data = eval_obj.to_mesh()
+        try:
+            mw = eval_obj.matrix_world
+            for v in mesh_data.vertices:
+                pts.append(mw @ v.co)
+        finally:
+            eval_obj.to_mesh_clear()
+    return pts
+
+mid_frame = f_start + max(1, (f_end - f_start) // 2)
+pts_a = _sample_positions(f_start)
+pts_b = _sample_positions(mid_frame)
+max_disp = 0.0
+for p0, p1 in zip(pts_a, pts_b):
+    d = (p1 - p0).length
+    if d > max_disp:
+        max_disp = d
+
+target_frame = {frame!r} if {frame!r} is not None else mid_frame
+bpy.context.scene.frame_set(int(target_frame))
+bpy.context.view_layer.update()
+
+saved_blend = None
+if {save_blend!r}:
+    save_path = {save_blend!r}
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=save_path)
+    saved_blend = save_path
+
+print("CATALOG_ANIM_JSON:" + json.dumps({{
+    "target_armature": arm.name,
+    "clip_name": chosen.name,
+    "action_slot": assigned_slot,
+    "frame_start": f_start,
+    "frame_end": f_end,
+    "evaluated_frame": int(target_frame),
+    "max_vertex_displacement": round(float(max_disp), 6),
+    "available_clips": available_clips,
     "saved_blend": saved_blend,
 }}))
 """
@@ -1175,6 +1500,24 @@ def _resolve_launcher(cfg: dict[str, Any], explicit_launcher: str | None) -> str
     return str(Path(candidate).expanduser())
 
 
+def _run_blender_mcp(mcp_launcher: str, code: str, marker_prefix: str) -> dict[str, Any]:
+    with StdioMCPClient([mcp_launcher], timeout=180.0) as client:
+        client.initialize()
+        mcp_result = client.call_tool("execute_blender_code", {"code": code})
+
+    if mcp_result.get("isError"):
+        texts = [c.get("text", "") for c in mcp_result.get("content", []) if c.get("type") == "text"]
+        raise RuntimeError(f"Blender MCP execution failed: {' '.join(texts)}")
+
+    combined_text = "\n".join(
+        c.get("text", "") for c in mcp_result.get("content", []) if c.get("type") == "text"
+    )
+    for line in combined_text.splitlines():
+        if line.startswith(marker_prefix):
+            return json.loads(line.split(marker_prefix, 1)[1])
+    raise RuntimeError(f"Missing {marker_prefix} in Blender MCP output:\n{combined_text[-1500:]}")
+
+
 def import_to_blender(
     index: CatalogIndex,
     cfg: dict[str, Any],
@@ -1186,6 +1529,7 @@ def import_to_blender(
     rotation_deg: tuple[float, float, float] = (0.0, 0.0, 0.0),
     scale: float = 1.0,
     save_blend: str | None = None,
+    ground_on_z0: bool = False,
     cache_local: bool = False,
     launcher: str | None = None,
 ) -> dict[str, Any]:
@@ -1204,32 +1548,103 @@ def import_to_blender(
         scale=scale,
         clear_scene=clear_scene,
         save_blend=save_blend,
+        ground_on_z0=ground_on_z0,
     )
-
-    with StdioMCPClient([mcp_launcher], timeout=180.0) as client:
-        client.initialize()
-        mcp_result = client.call_tool("execute_blender_code", {"code": code})
-
-    if mcp_result.get("isError"):
-        texts = [c.get("text", "") for c in mcp_result.get("content", []) if c.get("type") == "text"]
-        raise RuntimeError(f"Blender MCP import failed: {' '.join(texts)}")
-
-    combined_text = "\n".join(
-        c.get("text", "") for c in mcp_result.get("content", []) if c.get("type") == "text"
-    )
-    import_info = None
-    for line in combined_text.splitlines():
-        if line.startswith("CATALOG_IMPORT_JSON:"):
-            import_info = json.loads(line.split("CATALOG_IMPORT_JSON:", 1)[1])
-            break
-    if import_info is None:
-        raise RuntimeError(f"Missing CATALOG_IMPORT_JSON in Blender MCP output:\n{combined_text[-1500:]}")
-
+    import_info = _run_blender_mcp(mcp_launcher, code, "CATALOG_IMPORT_JSON:")
     return {
         "asset_id": asset_id,
         "resolution": res,
         "staging": staged["staging"],
         "blender_import": import_info,
+    }
+
+
+def attach_prop_to_bone(
+    index: CatalogIndex,
+    cfg: dict[str, Any],
+    asset_id: str,
+    *,
+    target_armature: str,
+    bone_name: str,
+    offset: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    rotation_deg: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    scale: float = 1.0,
+    gltf_bone_align: bool = True,
+    save_blend: str | None = None,
+    cache_local: bool = False,
+    launcher: str | None = None,
+) -> dict[str, Any]:
+    """Resolve, stage, and natively attach a prop GLB to an armature bone socket via MCP."""
+    mcp_launcher = _resolve_launcher(cfg, launcher)
+    staged = stage_to_remote(index, cfg, asset_id, cache_local=cache_local)
+    res = staged["resolution"]
+    tag = _safe_blender_tag(res["record"], res["sha256"])
+    code = build_attach_prop_script(
+        remote_path=staged["staging"]["remote_path"],
+        tag=tag,
+        target_armature=target_armature,
+        bone_name=bone_name,
+        offset=offset,
+        rotation_deg=rotation_deg,
+        scale=scale,
+        gltf_bone_align=gltf_bone_align,
+        save_blend=save_blend,
+    )
+    attach_info = _run_blender_mcp(mcp_launcher, code, "CATALOG_ATTACH_JSON:")
+    return {
+        "asset_id": asset_id,
+        "resolution": res,
+        "staging": staged["staging"],
+        "attachment": attach_info,
+    }
+
+
+def bind_animation_to_armature(
+    index: CatalogIndex,
+    cfg: dict[str, Any],
+    asset_id: str,
+    *,
+    target_armature: str,
+    target_asset_id: str | None = None,
+    clip_query: str | None = None,
+    frame: int | None = None,
+    set_frame_range: bool = True,
+    force_skeleton: bool = False,
+    save_blend: str | None = None,
+    cache_local: bool = False,
+    launcher: str | None = None,
+) -> dict[str, Any]:
+    """Bind a compatible animation pack (or embedded character clip) using Blender 5.2 Action Slots."""
+    mcp_launcher = _resolve_launcher(cfg, launcher)
+    anim_rec = index.get(asset_id)
+    if target_asset_id and not force_skeleton:
+        target_rec = index.get(target_asset_id)
+        anim_fam = anim_rec.get("skeleton_family")
+        target_fam = target_rec.get("skeleton_family")
+        if anim_fam and target_fam and anim_fam != "None" and target_fam != "None" and anim_fam != target_fam:
+            raise ValueError(
+                f"Incompatible skeleton families: target {target_asset_id!r} ({target_fam}) != {asset_id!r} ({anim_fam}). Pass --force-skeleton to override."
+            )
+
+    staged = stage_to_remote(index, cfg, asset_id, cache_local=cache_local)
+    remote_path = staged["staging"]["remote_path"]
+    # If the caller targets the same embedded character GLB (e.g. goblin Attack), avoid re-importing duplicate objects
+    if target_asset_id and target_asset_id == asset_id:
+        remote_path = None
+    code = build_bind_animation_script(
+        remote_path=remote_path,
+        target_armature=target_armature,
+        clip_query=clip_query,
+        frame=frame,
+        set_frame_range=set_frame_range,
+        save_blend=save_blend,
+    )
+    anim_info = _run_blender_mcp(mcp_launcher, code, "CATALOG_ANIM_JSON:")
+    return {
+        "asset_id": asset_id,
+        "resolution": staged["resolution"],
+        "staging": staged["staging"],
+        "animation": anim_info,
     }
 
 
@@ -1327,9 +1742,34 @@ def main() -> int:
     p_import.add_argument("--location", default="0,0,0")
     p_import.add_argument("--rotation-deg", default="0,0,0")
     p_import.add_argument("--scale", type=float, default=1.0)
+    p_import.add_argument("--ground-on-z0", action="store_true", help="Shift root Empty in Z so world bbox sits flush on Z=0")
     p_import.add_argument("--save-blend", default=None)
     p_import.add_argument("--cache-local", action="store_true")
     p_import.add_argument("--launcher", default=None, help="Optional MCP stdio launcher executable path")
+
+    p_attach = sub.add_parser("attach-prop", help="Attach a catalog prop/accessory GLB to an armature bone socket")
+    p_attach.add_argument("asset_id")
+    p_attach.add_argument("--target-armature", required=True)
+    p_attach.add_argument("--bone", required=True)
+    p_attach.add_argument("--offset", default="0,0,0")
+    p_attach.add_argument("--rotation-deg", default="0,0,0")
+    p_attach.add_argument("--scale", type=float, default=1.0)
+    p_attach.add_argument("--no-gltf-bone-align", action="store_true", help="Skip -90 deg X alignment from glTF Y-up prop space into Blender bone space")
+    p_attach.add_argument("--save-blend", default=None)
+    p_attach.add_argument("--cache-local", action="store_true")
+    p_attach.add_argument("--launcher", default=None)
+
+    p_anim = sub.add_parser("bind-animation", help="Bind a compatible animation pack/clip using Blender 5.2 Action Slots")
+    p_anim.add_argument("asset_id")
+    p_anim.add_argument("--target-armature", required=True)
+    p_anim.add_argument("--target-asset-id", default=None, help="Optional catalog asset_id of target armature for skeleton check")
+    p_anim.add_argument("--clip", default=None, help="Optional clip name or substring (default: first non-T-Pose)")
+    p_anim.add_argument("--frame", type=int, default=None, help="Optional frame to leave evaluated (default: midpoint)")
+    p_anim.add_argument("--no-set-frame-range", action="store_true")
+    p_anim.add_argument("--force-skeleton", action="store_true")
+    p_anim.add_argument("--save-blend", default=None)
+    p_anim.add_argument("--cache-local", action="store_true")
+    p_anim.add_argument("--launcher", default=None)
 
     p_prune = sub.add_parser("prune-remote-cache", help="Remove staged GLBs from configured remote staging cache")
     p_prune.add_argument("--dry-run", action="store_true")
@@ -1374,6 +1814,37 @@ def main() -> int:
             location=_parse_vec3(args.location),
             rotation_deg=_parse_vec3(args.rotation_deg),
             scale=args.scale,
+            save_blend=args.save_blend,
+            ground_on_z0=args.ground_on_z0,
+            cache_local=args.cache_local,
+            launcher=args.launcher,
+        )
+    elif args.command == "attach-prop":
+        out = attach_prop_to_bone(
+            index,
+            cfg,
+            args.asset_id,
+            target_armature=args.target_armature,
+            bone_name=args.bone,
+            offset=_parse_vec3(args.offset),
+            rotation_deg=_parse_vec3(args.rotation_deg),
+            scale=args.scale,
+            gltf_bone_align=not args.no_gltf_bone_align,
+            save_blend=args.save_blend,
+            cache_local=args.cache_local,
+            launcher=args.launcher,
+        )
+    elif args.command == "bind-animation":
+        out = bind_animation_to_armature(
+            index,
+            cfg,
+            args.asset_id,
+            target_armature=args.target_armature,
+            target_asset_id=args.target_asset_id,
+            clip_query=args.clip,
+            frame=args.frame,
+            set_frame_range=not args.no_set_frame_range,
+            force_skeleton=args.force_skeleton,
             save_blend=args.save_blend,
             cache_local=args.cache_local,
             launcher=args.launcher,

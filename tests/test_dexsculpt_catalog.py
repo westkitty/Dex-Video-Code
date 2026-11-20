@@ -449,6 +449,8 @@ class DexsculptCatalogTests(unittest.TestCase):
             self.assertIn("Catalog_", executed_codes[0])
             self.assertIn("glTF_not_exported", executed_codes[0])
             self.assertIn("custom_shape", executed_codes[0])
+            self.assertIn("disable_bone_shape", executed_codes[0])
+            self.assertIn("root_empty.location.z -=", executed_codes[0])
 
             # Missing MCP launcher fails loudly
             cfg_no_launcher = dict(cfg)
@@ -456,6 +458,156 @@ class DexsculptCatalogTests(unittest.TestCase):
             with mock.patch.dict(os.environ, {}, clear=True):
                 with self.assertRaises(ValueError):
                     dc.import_to_blender(index, cfg_no_launcher, asset_id)
+
+    def test_attach_prop_bind_animation_and_remote_lru_eviction(self) -> None:
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as tmp:
+            root = Path(tmp).resolve()
+            index, cfg = self._build_temp_catalog_env(root)
+
+            # 1. Attach prop script & mocked call
+            seen_attach_code = []
+
+            class FakeAttachClient:
+                def __init__(self, *_a, **_kw):
+                    pass
+
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, *_a):
+                    return None
+
+                def initialize(self):
+                    return {}
+
+                def call_tool(self, _name, arguments):
+                    seen_attach_code.append(arguments["code"])
+                    return {
+                        "isError": False,
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": 'CATALOG_ATTACH_JSON:{"target_armature":"Rig_Medium","bone_name":"handslot.r","collection":"Prop_Sword","prop_root":"PropRoot_Sword","imported_object_count":1,"mesh_count":1,"socket_world":[0,0,1],"prop_world":[0,0,1],"socket_distance_m":0.0,"saved_blend":null}',
+                            }
+                        ],
+                    }
+
+            sword_rec = index.get("kaykit-adventurers/accessory/sword_1handed")
+            with mock.patch.object(
+                dc,
+                "_ssh_python",
+                return_value={
+                    "exists": True,
+                    "bytes": sword_rec["processed_glb_bytes"],
+                    "sha256": sword_rec["processed_glb_sha256"],
+                    "free_gib": 6.0,
+                },
+            ), mock.patch.object(dc, "StdioMCPClient", FakeAttachClient):
+                att = dc.attach_prop_to_bone(
+                    index,
+                    cfg,
+                    "kaykit-adventurers/accessory/sword_1handed",
+                    target_armature="Rig_Medium",
+                    bone_name="handslot.r",
+                )
+            self.assertEqual(att["attachment"]["bone_name"], "handslot.r")
+            self.assertEqual(att["attachment"]["socket_distance_m"], 0.0)
+            self.assertIn('parent_type = "BONE"', seen_attach_code[0])
+            self.assertIn("Matrix.Translation((0.0, -bone_len, 0.0))", seen_attach_code[0])
+            self.assertIn('Matrix.Rotation(-math.pi * 0.5, 4, "X") if True', seen_attach_code[0])
+            unaligned_script = dc.build_attach_prop_script(
+                remote_path="/tmp/prop.glb",
+                tag="Prop_NoAlign",
+                target_armature="Rig_Medium",
+                bone_name="handslot.r",
+                gltf_bone_align=False,
+            )
+            self.assertIn("if False else Matrix.Identity(4)", unaligned_script)
+
+            # 2. Skeleton mismatch blocked unless force_skeleton=True
+            with self.assertRaises(ValueError):
+                dc.bind_animation_to_armature(
+                    index,
+                    cfg,
+                    "kaykit-character-animations/rig_medium/rig_medium_general",
+                    target_armature="EnemyArmature",
+                    target_asset_id="quaternius-cube-world-kit/character/goblin",
+                )
+
+            seen_anim_code = []
+
+            class FakeAnimClient:
+                def __init__(self, *_a, **_kw):
+                    pass
+
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, *_a):
+                    return None
+
+                def initialize(self):
+                    return {}
+
+                def call_tool(self, _name, arguments):
+                    seen_anim_code.append(arguments["code"])
+                    return {
+                        "isError": False,
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": 'CATALOG_ANIM_JSON:{"target_armature":"Rig_Medium","clip_name":"Walking_A","action_slot":"OBRig_Medium","frame_start":0,"frame_end":32,"evaluated_frame":16,"max_vertex_displacement":0.42,"available_clips":["Walking_A"],"saved_blend":null}',
+                            }
+                        ],
+                    }
+
+            anim_rec = index.get("kaykit-character-animations/rig_medium/rig_medium_general")
+            with mock.patch.object(
+                dc,
+                "_ssh_python",
+                return_value={
+                    "exists": True,
+                    "bytes": anim_rec["processed_glb_bytes"],
+                    "sha256": anim_rec["processed_glb_sha256"],
+                    "free_gib": 6.0,
+                },
+            ), mock.patch.object(dc, "StdioMCPClient", FakeAnimClient):
+                bound = dc.bind_animation_to_armature(
+                    index,
+                    cfg,
+                    "kaykit-character-animations/rig_medium/rig_medium_general",
+                    target_armature="Rig_Medium",
+                    target_asset_id="kaykit-adventurers/character/knight",
+                    clip_query="Walking_A",
+                )
+            self.assertEqual(bound["animation"]["action_slot"], "OBRig_Medium")
+            self.assertGreater(bound["animation"]["max_vertex_displacement"], 0.1)
+            self.assertIn("action_slot", seen_anim_code[0])
+            self.assertIn("to_mesh_clear()", seen_anim_code[0])
+
+            # 3. Verify REMOTE_VERIFY_PROMOTE LRU eviction logic on local temp dirs
+            staging = root / "staging"
+            (staging / "old_src").mkdir(parents=True)
+            (staging / "new_src").mkdir(parents=True)
+            old_blob = make_fake_glb(b"X" * (700 * 1024))[0]
+            old_glb = staging / "old_src" / "old.glb"
+            old_glb.write_bytes(old_blob)
+            os.utime(old_glb, (1000.0, 1000.0))
+
+            new_blob, new_size, new_sha = make_fake_glb(b"Y" * (700 * 1024))
+            part_glb = staging / "new_src" / "new.glb.part.1"
+            final_glb = staging / "new_src" / "new.glb"
+            part_glb.write_bytes(new_blob)
+            proc = subprocess.run(
+                [sys.executable, "-c", dc.REMOTE_VERIFY_PROMOTE, str(part_glb), str(final_glb), str(new_size), new_sha, str(staging), "1"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            res = json.loads(proc.stdout)
+            self.assertEqual(res["evicted_files"], 1)
+            self.assertFalse(old_glb.exists())
+            self.assertTrue(final_glb.is_file())
 
 
 if __name__ == "__main__":

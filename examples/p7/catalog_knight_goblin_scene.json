@@ -1,0 +1,67 @@
+{
+  "schema_version": "catalog-scene.v1",
+  "scene_name": "catalog_knight_goblin_showcase",
+  "backdrop": "studio_dark",
+  "camera": {
+    "lens_mm": 45.0,
+    "elevation_deg": 14.0,
+    "azimuth_deg": -20.0,
+    "margin": 1.32
+  },
+  "render": {
+    "quad_qa_sheet": true,
+    "hero_still": true,
+    "hero_frame": 8,
+    "hero_samples": 48,
+    "hero_width": 1280,
+    "hero_height": 720,
+    "animation_mp4": true,
+    "start_frame": 1,
+    "end_frame": 24,
+    "anim_width": 640,
+    "anim_height": 360,
+    "anim_samples": 16
+  },
+  "characters": [
+    {
+      "name": "knight",
+      "asset_id": "kaykit-adventurers/character/knight",
+      "location": [-0.95, -0.22, 0.0],
+      "rotation_deg": [0.0, 0.0, 22.0],
+      "scale": 1.0,
+      "ground_on_z0": true,
+      "attachments": [
+        {
+          "asset_id": "kaykit-adventurers/accessory/sword_1handed",
+          "bone": "handslot.r",
+          "offset": [0.0, 0.0, 0.0],
+          "rotation_deg": [0.0, 0.0, 0.0],
+          "scale": 1.0
+        },
+        {
+          "asset_id": "kaykit-adventurers/accessory/shield_round",
+          "bone": "handslot.l",
+          "offset": [0.0, 0.0, 0.0],
+          "rotation_deg": [0.0, 0.0, 0.0],
+          "scale": 1.0
+        }
+      ],
+      "animation": {
+        "asset_id": "kaykit-adventurers/animation_pack/rig_medium_movementbasic",
+        "clip": "Walking_A"
+      }
+    },
+    {
+      "name": "goblin",
+      "asset_id": "quaternius-cube-world-kit/character/goblin",
+      "location": [1.05, 0.25, 0.0],
+      "rotation_deg": [0.0, 0.0, -28.0],
+      "scale": 0.58,
+      "ground_on_z0": true,
+      "attachments": [],
+      "animation": {
+        "clip": "Attack"
+      }
+    }
+  ]
+}

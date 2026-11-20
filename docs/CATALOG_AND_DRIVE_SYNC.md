@@ -60,6 +60,7 @@ Omitting `--gdrive-sync-config` preserves `scripts/transfer_verified_file.py`'s 
   "remote_staging_dir": "<remote-staging-root>",
   "mcp_launcher": "<mcp-launcher-path>",
   "max_asset_bytes": 104857600,
+  "max_remote_cache_mb": 512,
   "min_local_free_gib": 2.0,
   "min_remote_free_gib": 1.5,
   "drive_read_timeout_seconds": 60
@@ -72,12 +73,35 @@ Omitting `--gdrive-sync-config` preserves `scripts/transfer_verified_file.py`'s 
 python3 scripts/dexsculpt_catalog.py status --no-remote
 python3 scripts/dexsculpt_catalog.py search --query knight --limit 10
 python3 scripts/dexsculpt_catalog.py compatible kaykit-adventurers/character/knight --limit 10
-python3 scripts/dexsculpt_catalog.py import kaykit-adventurers/character/knight --clear-scene --location -1.1,0,0
+python3 scripts/dexsculpt_catalog.py import kaykit-adventurers/character/knight --clear-scene --ground-on-z0 --location -1.1,0,0
+python3 scripts/dexsculpt_catalog.py attach-prop kaykit-adventurers/accessory/sword_1handed --target-armature Rig_Medium --bone handslot.r
+python3 scripts/dexsculpt_catalog.py bind-animation kaykit-adventurers/animation_pack/rig_medium_movementbasic --target-armature Rig_Medium --target-asset-id kaykit-adventurers/character/knight --clip Walking_A
 python3 scripts/dexsculpt_catalog.py prune-remote-cache --dry-run
 ```
 
-- **Local-first, on-demand verification**: Checks `verified_cache_dir` before touching the Drive archive; never bulk-downloads the full multi-gigabyte archive onto low-disk workstations.
+- **Local-first, on-demand verification**: Checks `verified_cache_dir` before touching the Drive archive; never bulk-downloads the full multi-gigabyte archive onto low-disk workstations. Remote host staging enforces a bounded LRU cache cap (`max_remote_cache_mb`, default `512` MB) that touches `atime`/`mtime` on cache hits and evicts oldest staged `.glb` files when exceeded.
 - **Strict binary & duplicate disambiguation**: Validates 12-byte GLB 2.0 headers (`glTF`, version `2`, matching byte length) and exact SHA-256 checksums across all subdirectories to disambiguate colliding basenames (`quaternius-universal-base-characters-standard`).
-- **Transient DriveFS stall protection**: Uses bounded subprocess reads with retries on transient File Provider hangs and optional `gdrive readonly download` fallback via `com.google.drivefs.item-id#S`.
-- **Non-destructive Blender 5.2+ MCP import**: Clears only orphan scene datablocks when `--clear-scene` is passed (never `bpy.ops.wm.read_factory_settings()`), preserves rig authoring scales/rotations under `CatalogRoot_<tag>` Empty wrappers, and excludes Blender's `glTF_not_exported` / `pose.bones[].custom_shape` helper meshes (`Icosphere`) from scene geometry and bounding boxes.
+- **Transient DriveFS stall protection**: Uses bounded subprocess reads with retries on transient File Provider hangs and optional `gdrive readonly download` fallback via Drive item metadata.
+- **Non-destructive Blender 5.2+ MCP import & rigging**: Clears only orphan scene datablocks when `--clear-scene` is passed (never `bpy.ops.wm.read_factory_settings()`), passes native `disable_bone_shape=True` when supported plus `glTF_not_exported` / `pose.bones[].custom_shape` filtering so `Icosphere` bone-shape helpers never enter scene geometry or bounding boxes, supports `--ground-on-z0`, and preserves rig authoring scales/rotations under `CatalogRoot_<tag>` Empty wrappers.
+- **Native glTF bone-socket attachment (`attach-prop`)**: Parents prop roots directly with `parent_type="BONE"`, cancels Blender's bone-tail parenting offset via `Matrix.Translation((0.0, -bone_len, 0.0))`, applies `Rx(-90°)` glTF Y-up-to-bone alignment by default (`--no-gltf-bone-align` disables), and reports exact world `socket_distance_m`.
+- **Blender 5.2 Action Slots & deformation proof (`bind-animation`)**: Verifies `skeleton_family` compatibility (`--force-skeleton` overrides), imports donor actions cleanly without leaving orphan armatures/meshes, binds `action_slot` (`target_id_type == "OBJECT"`), and measures real `max_vertex_displacement` across evaluated depsgraph meshes (`evaluated_get(depsgraph).to_mesh()` + `to_mesh_clear()`).
 - **Licensing & privacy boundaries**: Never commit private GLB assets, Drive IDs, or `~/.config/dex-video-code/*.json` files to public Git; treat packs with QAL v1.0 redistribution limits (`quaternius-ultimate-modular-men`, `quaternius-ultimate-modular-women`) as private local-use only.
+
+## 3. Declarative Catalog Scene Director (`scripts/catalog_scene_director.py`)
+
+`scripts/catalog_scene_director.py` orchestrates multi-character catalog scenes from versioned `catalog-scene.v1` JSON manifests (for example `examples/p7/catalog_knight_goblin_scene.json`):
+
+1. Validates manifest bounds (maximum `48` frames for bounded MP4 renders, safe scene/run names) and stages character, prop, and compatible animation-pack GLBs to the remote staging cache.
+2. Assembles characters, sockets, and slotted animations in Blender 5.2+ over MCP (or `--headless-only`), adds backdrop lighting tracking the scene center, and computes an exact FOV/AABB `Director_Camera` framing.
+3. Enforces programmatic spatial & deformation QA (`evaluate_spatial_qa`) *before* rendering: floor grounding (`max_floor_error_m`), pairwise AABB separation (`overlap_pairs`), bone socket proximity (`max_socket_distance_m`), and minimum animated vertex displacement (`min_anim_displacement_m`).
+4. Renders a `2x2` multi-view spatial QA contact sheet (`Hero`, `Front`, `Side`, `Top`), a `720p` `AgX` hero still, and an optional bounded H.264 MP4 (verified with `ffprobe` and full `ffmpeg -xerror -f null -` decode, with intermediate PNGs cleaned up).
+5. Pulls verified artifacts back via `transfer_verified_file.py --multiplex --transfer-mode full` and optionally syncs them via `sync_to_gdrive.py`.
+
+```sh
+python3 scripts/catalog_scene_director.py \
+  --manifest examples/p7/catalog_knight_goblin_scene.json \
+  --catalog-config ~/.config/dex-video-code/catalog.json \
+  --remote-out-root <approved-remote-runs-root> \
+  --local-out-dir <approved-local-output-dir> \
+  --gdrive-sync-config ~/.config/dex-video-code/gdrive-sync.json
+```

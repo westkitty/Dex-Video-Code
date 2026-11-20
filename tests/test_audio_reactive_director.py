@@ -53,6 +53,23 @@ class AudioReactiveDirectorTests(unittest.TestCase):
             self.assertAlmostEqual(res["duration"], 4.0, delta=0.1)
             self.assertEqual(len(res["frames"]), 96)
             self.assertEqual(len(res["frames"][0]["b16"]), 16)
+            self.assertLessEqual(abs(res["estimated_bpm"] - 120.0), 1.0)
+            beat_period = 60.0 / res["estimated_bpm"]
+            self.assertGreaterEqual(res["beat_offset_s"], 0.0)
+            self.assertLess(res["beat_offset_s"], beat_period)
+            phase_mod = res["beat_offset_s"] % beat_period
+            phase_err = min(phase_mod, beat_period - phase_mod)
+            self.assertLessEqual(phase_err, 0.05)
+            self.assertGreaterEqual(len(res["beat_frames"]), 4)
+            self.assertGreaterEqual(len(res["impact_frames"]), 1)
+            for fr in res["frames"]:
+                self.assertGreaterEqual(fr["beat_phase"], 0.0)
+                self.assertLess(fr["beat_phase"], 1.0)
+                self.assertGreaterEqual(fr["beat_pulse"], 0.0)
+                self.assertLessEqual(fr["beat_pulse"], 1.0)
+                self.assertGreaterEqual(fr["impact"], 0.0)
+                self.assertLessEqual(fr["impact"], 1.0)
+                self.assertIsInstance(fr["is_beat"], bool)
 
             # First half is 65 Hz kick, second half is 4 kHz chime -> clear bass vs high separation
             early_bass = sum(f["bass"] for f in res["frames"][:40]) / 40.0

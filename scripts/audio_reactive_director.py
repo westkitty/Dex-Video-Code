@@ -216,15 +216,23 @@ def analyze_audio_track(audio_path: Path, *, fps: int = 24) -> dict[str, Any]:
 
     # Normalize & smooth equalizer bands with fast attack and 0.72 release
     smooth_bands = [0.0] * 16
-    frames_out: list[dict[str, Any]] = []
-    onset_env: list[float] = []
+    norm_frames: list[dict[str, Any]] = []
+    impact_raw_list: list[float] = []
+    max_impact_raw = 1e-6
+    prev_rn = 0.0
+    prev_bn = 0.0
     for f_idx, rf in enumerate(raw_frames):
         r_n = min(1.0, rf["rms"] / max_rms)
         b_n = min(1.0, rf["bass"] / max_bass)
         m_n = min(1.0, rf["mid"] / max_mid)
         h_n = min(1.0, rf["high"] / max_high)
         fl_n = min(1.0, rf["flux"] / max_flux)
-        onset_env.append(b_n + 0.6 * fl_n)
+
+        imp_raw = fl_n * 1.4 + max(0.0, r_n - prev_rn) * 1.5 + max(0.0, b_n - prev_bn) * 1.8
+        prev_rn = r_n
+        prev_bn = b_n
+        max_impact_raw = max(max_impact_raw, imp_raw)
+        impact_raw_list.append(imp_raw)
 
         cur_b16 = []
         for bi in range(16):
@@ -237,7 +245,7 @@ def analyze_audio_track(audio_path: Path, *, fps: int = 24) -> dict[str, Any]:
                 smooth_bands[bi] = smooth_bands[bi] * 0.72 + val * 0.28
             cur_b16.append(round(smooth_bands[bi], 4))
 
-        frames_out.append(
+        norm_frames.append(
             {
                 "f": f_idx + 1,
                 "t": round(f_idx / float(fps), 4),
@@ -250,21 +258,141 @@ def analyze_audio_track(audio_path: Path, *, fps: int = 24) -> dict[str, Any]:
             }
         )
 
+    # High-resolution (~200 Hz, ~5ms hop) onset envelope for sub-frame BPM & phase lock
     best_bpm = 128.0
-    best_score = -1.0
-    if total_frames > fps * 2:
-        for bpm_x2 in range(180, 321):  # 90 .. 160 BPM
-            bpm = bpm_x2 / 2.0
-            lag1 = max(1, int(round(fps * 60.0 / bpm)))
-            lag2 = max(2, int(round(fps * 120.0 / bpm)))
-            if lag2 >= total_frames:
+    best_offset_s = 0.0
+    hop = 110
+    win_hp = 512
+    n_hops = max(0, (num_samples - win_hp) // hop)
+    if duration >= 2.0 and n_hops >= 80:
+        hop_hz = sample_rate / float(hop)
+        alpha_low = (2.0 * math.pi * 160.0) / (2.0 * math.pi * 160.0 + sample_rate)
+        cs_f = [0.0] * (num_samples + 1)
+        cs_l = [0.0] * (num_samples + 1)
+        cs_h = [0.0] * (num_samples + 1)
+        prev_lp = 0.0
+        for idx_s, raw_s in enumerate(pcm):
+            x = raw_s / 32768.0
+            prev_lp += alpha_low * (x - prev_lp)
+            hi = x - prev_lp
+            cs_f[idx_s + 1] = cs_f[idx_s] + x * x
+            cs_l[idx_s + 1] = cs_l[idx_s] + prev_lp * prev_lp
+            cs_h[idx_s + 1] = cs_h[idx_s] + hi * hi
+
+        inv_w = 1.0 / float(win_hp)
+        full_e = [math.sqrt(max(0.0, cs_f[h * hop + win_hp] - cs_f[h * hop]) * inv_w) for h in range(n_hops)]
+        low_e = [math.sqrt(max(0.0, cs_l[h * hop + win_hp] - cs_l[h * hop]) * inv_w) for h in range(n_hops)]
+        hi_e = [math.sqrt(max(0.0, cs_h[h * hop + win_hp] - cs_h[h * hop]) * inv_w) for h in range(n_hops)]
+
+        onset_hp = [0.0] * n_hops
+        for i in range(1, n_hops):
+            df = max(0.0, full_e[i] - full_e[i - 1])
+            dl = max(0.0, low_e[i] - low_e[i - 1])
+            dh = max(0.0, hi_e[i] - hi_e[i - 1])
+            onset_hp[i] = dl * 2.5 + df * 1.2 + dh * 0.6
+
+        # Coarse comb/autocorrelation scan from 80.0 to 170.0 BPM in 0.2 BPM steps
+        coarse_best_bpm = 128.0
+        coarse_best_score = -1.0
+        for bpm10 in range(800, 1702, 2):
+            bpm_c = bpm10 / 10.0
+            period_h = hop_hz * 60.0 / bpm_c
+            sc = 0.0
+            for mult, w in ((1, 1.0), (2, 1.0), (4, 0.8), (8, 0.5)):
+                lag = int(round(period_h * mult))
+                if lag < n_hops:
+                    acc = sum(onset_hp[i] * onset_hp[i + lag] for i in range(0, n_hops - lag, 2))
+                    sc += w * acc / max(1.0, (n_hops - lag) * 0.5)
+            if sc > coarse_best_score:
+                coarse_best_score = sc
+                coarse_best_bpm = bpm_c
+
+        # Fine comb + 48-bin phase lock around coarse winner (±1.0 BPM in 0.02 BPM steps)
+        fine_best_score = -1.0
+        fine_best_bpm = coarse_best_bpm
+        fine_best_offset_s = 0.0
+        for step in range(-50, 51):
+            bpm_f = round(coarse_best_bpm + step * 0.02, 2)
+            if not 60.0 <= bpm_f <= 200.0:
                 continue
-            s1 = sum(onset_env[i] * onset_env[i + lag1] for i in range(total_frames - lag1)) / float(total_frames - lag1)
-            s2 = sum(onset_env[i] * onset_env[i + lag2] for i in range(total_frames - lag2)) / float(total_frames - lag2)
-            score = s1 + 0.7 * s2
-            if score > best_score:
-                best_score = score
-                best_bpm = bpm
+            period_h = hop_hz * 60.0 / bpm_f
+            n_ph = 48
+            best_ph_sc = -1.0
+            best_ph_s = 0.0
+            for p_idx in range(n_ph):
+                ph_h = (p_idx / float(n_ph)) * period_h
+                pos = ph_h
+                acc = 0.0
+                cnt = 0
+                while pos < n_hops - 2:
+                    ii = int(round(pos))
+                    lo_i = max(0, ii - 2)
+                    hi_i = min(n_hops, ii + 3)
+                    acc += max(onset_hp[lo_i:hi_i])
+                    cnt += 1
+                    pos += period_h
+                ph_sc = acc / float(max(1, cnt))
+                if ph_sc > best_ph_sc:
+                    best_ph_sc = ph_sc
+                    best_ph_s = ph_h / hop_hz
+            if best_ph_sc > fine_best_score:
+                fine_best_score = best_ph_sc
+                fine_best_bpm = bpm_f
+                fine_best_offset_s = best_ph_s
+
+        best_bpm = round(fine_best_bpm, 2)
+        best_offset_s = round(fine_best_offset_s, 4)
+
+    beat_period_s = 60.0 / max(1.0, best_bpm)
+    beat_frame_set: set[int] = set()
+    k_idx = 0
+    while True:
+        t_beat = best_offset_s + k_idx * beat_period_s
+        if t_beat > duration + 0.5 / float(fps):
+            break
+        bf = int(round(t_beat * fps)) + 1
+        if 1 <= bf <= total_frames:
+            beat_frame_set.add(bf)
+        k_idx += 1
+    beat_frames = sorted(beat_frame_set)
+
+    frames_out: list[dict[str, Any]] = []
+    norm_impacts: list[float] = []
+    for idx_f, nf in enumerate(norm_frames):
+        f_num = nf["f"]
+        t_cur = idx_f / float(fps)
+        b_phase = ((t_cur - best_offset_s) / beat_period_s) % 1.0
+        b_pulse = math.exp(-6.5 * b_phase)
+        imp_norm = min(1.0, impact_raw_list[idx_f] / max_impact_raw)
+        norm_impacts.append(imp_norm)
+        nf_out = {
+            **nf,
+            "beat_phase": round(b_phase, 4),
+            "beat_pulse": round(b_pulse, 4),
+            "is_beat": f_num in beat_frame_set,
+            "impact": round(imp_norm, 4),
+        }
+        frames_out.append(nf_out)
+
+    # Top 36 local-maximum impact frames with at least 8 frames separation
+    local_peaks: list[tuple[float, int]] = []
+    for idx_f in range(total_frames):
+        left = norm_impacts[idx_f - 1] if idx_f > 0 else -1.0
+        right = norm_impacts[idx_f + 1] if idx_f + 1 < total_frames else -1.0
+        if norm_impacts[idx_f] > left and norm_impacts[idx_f] >= right and norm_impacts[idx_f] > 0.0:
+            local_peaks.append((norm_impacts[idx_f], idx_f + 1))
+    local_peaks.sort(reverse=True)
+    selected_impacts: list[int] = []
+    for _, f_num in local_peaks:
+        if all(abs(f_num - prev_f) >= 8 for prev_f in selected_impacts):
+            selected_impacts.append(f_num)
+        if len(selected_impacts) >= 36:
+            break
+    selected_impacts.sort()
+    impact_frames = [
+        {"f": f_num, "t": frames_out[f_num - 1]["t"], "impact": frames_out[f_num - 1]["impact"]}
+        for f_num in selected_impacts
+    ]
 
     return {
         "schema_version": "audio-reactive-analysis.v1",
@@ -272,6 +400,9 @@ def analyze_audio_track(audio_path: Path, *, fps: int = 24) -> dict[str, Any]:
         "duration": round(duration, 4),
         "total_frames": total_frames,
         "estimated_bpm": best_bpm,
+        "beat_offset_s": best_offset_s,
+        "beat_frames": beat_frames,
+        "impact_frames": impact_frames,
         "frames": frames_out,
     }
 

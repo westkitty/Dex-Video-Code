@@ -72,6 +72,23 @@ class AudioReactiveDirectorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ard.partition_chunks(1, 100, max_chunk=60)
 
+    def test_cast_presets_and_storyboard_frame_parsing(self) -> None:
+        band = ard.resolve_cast_preset("band")
+        heist = ard.resolve_cast_preset("heist")
+        self.assertEqual(len(band), 4)
+        self.assertGreaterEqual(len(heist), 11)
+        self.assertIn("kaykit-adventurers/character/rogue_hooded", heist)
+        self.assertIn("kaykit-adventurers/animation_pack/rig_medium_movementbasic", heist)
+        with self.assertRaises(ValueError):
+            ard.resolve_cast_preset("unknown")
+
+        frames = ard.parse_storyboard_frames("0, 182, 255, 342, 450, 710, 840, 1165, 9999", total_frames=1386)
+        self.assertEqual(frames[0], 1)
+        self.assertEqual(frames[-1], 1386)
+        self.assertEqual(len(frames), 9)
+        with self.assertRaises(ValueError):
+            ard.parse_storyboard_frames("1,2,3", total_frames=1386)
+
 
 if __name__ == "__main__":
     unittest.main()

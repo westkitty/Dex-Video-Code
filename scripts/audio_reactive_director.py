@@ -38,6 +38,47 @@ REPO_ROOT = SCRIPTS_DIR.parent
 DEFAULT_BUILDER = REPO_ROOT / "examples" / "p7" / "midnight_clockwork_swing_builder.py"
 MAX_CHUNK_FRAMES = 48
 
+CAST_PRESETS: dict[str, list[str]] = {
+    "band": [
+        "kaykit-adventurers/character/mage",
+        "kaykit-adventurers/character/barbarian",
+        "kaykit-adventurers/character/rogue",
+        "kaykit-adventurers/character/knight",
+    ],
+    "heist": [
+        "kaykit-adventurers/character/mage",
+        "kaykit-adventurers/character/barbarian",
+        "kaykit-adventurers/character/rogue",
+        "kaykit-adventurers/character/rogue_hooded",
+        "kaykit-adventurers/character/knight",
+        "kaykit-adventurers/character/ranger",
+        "kaykit-adventurers/accessory/sword_1handed",
+        "kaykit-adventurers/accessory/shield_round",
+        "kaykit-adventurers/accessory/axe_1handed",
+        "kaykit-adventurers/animation_pack/rig_medium_movementbasic",
+        "kaykit-adventurers/animation_pack/rig_medium_general",
+    ],
+}
+
+
+def resolve_cast_preset(preset: str) -> list[str]:
+    """Return the verified catalog asset IDs for a named music-video cast preset."""
+    key = preset.strip().lower()
+    if key not in CAST_PRESETS:
+        raise ValueError(f"Unsupported cast preset {preset!r}; choose from {sorted(CAST_PRESETS)}")
+    return list(CAST_PRESETS[key])
+
+
+def parse_storyboard_frames(raw: str | None, *, total_frames: int) -> list[int]:
+    """Parse 9 comma-separated frame numbers clamped cleanly to 1..total_frames."""
+    if not raw:
+        defaults = [60, 240, 355, 480, 710, 850, 1060, 1165, 1320]
+    else:
+        defaults = [int(part.strip()) for part in raw.split(",") if part.strip()]
+        if len(defaults) != 9:
+            raise ValueError(f"--storyboard-frames must specify exactly 9 integers, got {len(defaults)}")
+    return [max(1, min(total_frames, f)) for f in defaults]
+
 
 def _resolve_ffmpeg_tools() -> tuple[str, str]:
     ffmpeg_bin = "ffmpeg"
@@ -627,6 +668,7 @@ def direct_music_video(
     samples: int = 12,
     hero_frame: int = 1165,
     storyboard_frames: list[int] | None = None,
+    cast_preset: str = "band",
 ) -> dict[str, Any]:
     """Orchestrate full audio-reactive Blender 5.2+ music video production."""
     if not dc.SAFE_NAME_RE.match(run_subdir) or not dc.SAFE_NAME_RE.match(scene_name):
@@ -658,12 +700,7 @@ def direct_music_video(
 
     build_report: dict[str, Any] | None = None
     if not skip_build:
-        cast_ids = [
-            "kaykit-adventurers/character/mage",
-            "kaykit-adventurers/character/barbarian",
-            "kaykit-adventurers/character/rogue",
-            "kaykit-adventurers/character/knight",
-        ]
+        cast_ids = resolve_cast_preset(cast_preset)
         staged_cast = {}
         for aid in cast_ids:
             st = dc.stage_to_remote(index, cfg, aid)
@@ -704,8 +741,10 @@ def direct_music_video(
         if build_report is None:
             raise RuntimeError(f"Missing MUSIC_VIDEO_BUILD_JSON in builder output:\n{proc.stdout[-1500:]}\n{proc.stderr[-1500:]}")
 
-    shots = storyboard_frames or [60, 240, 355, 480, 710, 850, 1060, 1165, 1320]
-    shots = [max(1, min(analysis["total_frames"], int(f))) for f in shots]
+    shots = parse_storyboard_frames(
+        ",".join(str(f) for f in storyboard_frames) if storyboard_frames else None,
+        total_frames=analysis["total_frames"],
+    )
 
     if storyboard_only:
         sb_manifest = dc._ssh_python(
@@ -847,10 +886,19 @@ def main() -> int:
     parser.add_argument("--height", type=int, default=720)
     parser.add_argument("--samples", type=int, default=12)
     parser.add_argument("--parallel-workers", type=int, default=2)
+    parser.add_argument("--cast-preset", choices=sorted(CAST_PRESETS), default="band")
+    parser.add_argument("--storyboard-frames", default=None, help="9 comma-separated frames for 3x3 storyboard/encoded QA sheets")
+    parser.add_argument("--hero-frame", type=int, default=1165, help="Hero high-sample frame index")
     parser.add_argument("--storyboard-only", action="store_true")
     parser.add_argument("--render-full", action="store_true")
     parser.add_argument("--skip-build", action="store_true")
     args = parser.parse_args()
+
+    parsed_shots = None
+    if args.storyboard_frames:
+        parsed_shots = [int(p.strip()) for p in args.storyboard_frames.split(",") if p.strip()]
+        if len(parsed_shots) != 9:
+            parser.error("--storyboard-frames must contain exactly 9 comma-separated integers")
 
     out = direct_music_video(
         audio_path=args.audio,
@@ -868,6 +916,9 @@ def main() -> int:
         width=args.width,
         height=args.height,
         samples=args.samples,
+        hero_frame=args.hero_frame,
+        storyboard_frames=parsed_shots,
+        cast_preset=args.cast_preset,
     )
     print(json.dumps(out, indent=2))
     return 0

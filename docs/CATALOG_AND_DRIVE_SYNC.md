@@ -105,3 +105,30 @@ python3 scripts/catalog_scene_director.py \
   --local-out-dir <approved-local-output-dir> \
   --gdrive-sync-config ~/.config/dex-video-code/gdrive-sync.json
 ```
+
+## 4. Audio-Reactive Music Video Director (`scripts/audio_reactive_director.py`)
+
+`scripts/audio_reactive_director.py` (with scene builder example `examples/p7/midnight_clockwork_swing_builder.py`) drives Blender 5.2+ concert stages and DEX//SCULPT `Rig_Medium` performers directly from music tracks:
+
+1. Decodes any audio file via FFmpeg mono PCM (`22050 Hz`) and runs a pure-Python radix-2 FFT to extract per-frame normalized `rms`, `bass`/`mid`/`high` envelopes, spectral onset `flux`, 16 logarithmic equalizer bands (`b16`), and estimated BPM.
+2. Stages catalog performers safely, transfers compact `scene_build_spec.json` data, and supports a `--storyboard-only` 9-shot `3x3` visual QQQ pre-flight gate before full rendering.
+3. With `--render-full`, partitions long songs into `<= 48` frame chunks across two parallel warm background Blender 5.2+ workers, encodes each chunk immediately to H.264 segment MP4s while purging chunk PNGs to bound remote scratch disk usage, muxes stereo AAC audio with explicit `-map 0:v:0 -map 1:a:0` stream selection, runs `ffprobe` + full `ffmpeg -xerror -f null -` decode + `frame_qa_gate.py` luma/motion checks, and pulls verified outputs via multiplexed SCP + optional `sync_to_gdrive.py`.
+
+```sh
+# 1) Build scene & visually inspect 9-shot storyboard
+python3 scripts/audio_reactive_director.py \
+  --audio <local-audio-track> \
+  --catalog-config ~/.config/dex-video-code/catalog.json \
+  --remote-out-root <approved-remote-runs-root> \
+  --local-out-dir <approved-local-output-dir> \
+  --storyboard-only
+
+# 2) Full parallel streaming render, audio mux, and Drive sync
+python3 scripts/audio_reactive_director.py \
+  --audio <local-audio-track> \
+  --catalog-config ~/.config/dex-video-code/catalog.json \
+  --remote-out-root <approved-remote-runs-root> \
+  --local-out-dir <approved-local-output-dir> \
+  --gdrive-sync-config ~/.config/dex-video-code/gdrive-sync.json \
+  --render-full --skip-build
+```

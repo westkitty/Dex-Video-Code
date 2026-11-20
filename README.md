@@ -45,7 +45,7 @@ To render an authored example, use a prompt that matches its medium and duration
 
 Planning creates missing parent directories inside the current project workspace, refuses symlink escapes, and never overwrites an existing manifest. `produce` refuses unsupported or blocked jobs. The renderer's title text is omitted when the brief prohibits text. Verification records technical status only; `PENDING_HUMAN_REVIEW` is not an artistic pass.
 
-See [operational state](OPERATIONAL_STATE.md), [bridge contract](docs/PROJECT_BRIDGE.md), [Blender render optimization](docs/BLENDER_RENDER_OPTIMIZATION.md), [Project bootstrap](docs/CHATGPT_PROJECT_BOOTSTRAP.md), [Project setup](docs/CHATGPT_PROJECT_SETUP.md), and [Project instructions](docs/CHATGPT_PROJECT_INSTRUCTIONS.md).
+See [operational state](OPERATIONAL_STATE.md), [bridge contract](docs/PROJECT_BRIDGE.md), [Blender render optimization](docs/BLENDER_RENDER_OPTIMIZATION.md), [Catalog and Drive sync](docs/CATALOG_AND_DRIVE_SYNC.md), [Project bootstrap](docs/CHATGPT_PROJECT_BOOTSTRAP.md), [Project setup](docs/CHATGPT_PROJECT_SETUP.md), and [Project instructions](docs/CHATGPT_PROJECT_INSTRUCTIONS.md).
 
 # Verified binary transfer
 
@@ -85,3 +85,8 @@ Run the focused helper regressions with `python3 tests/test_transfer_verified_fi
 # Blender rendering optimization & QA helpers
 
 `director render-profiles --json` exposes the versioned `render-optimization-profile.v1` quality presets and encode settings. Supporting scripts in `scripts/` implement Blender 5.2+ Cycles Metal & EEVEE optimization (`scripts/blender_render_pipeline.py`), parallel/sliding-window/warm batch rendering (`scripts/blender_batch_runner.py`), SHA-256 asset library manifests (`scripts/blender_asset_library.py`), and normalized FFmpeg luma/motion QA gates (`scripts/frame_qa_gate.py`). See [Blender render optimization](docs/BLENDER_RENDER_OPTIMIZATION.md) and `examples/p7/dragon_mountain_sneeze_v2.py`.
+
+# DriveFS output sync & DEX//SCULPT catalog bridge
+
+- `scripts/sync_to_gdrive.py`: Routes verified workstation output runs into a user-configured Google Drive for Desktop folder (`~/.config/dex-video-code/gdrive-sync.json`, mode `0600`), verifying destination SHA-256 digests and macOS File Provider upload status without committing Drive IDs or credentials. Also available opt-in via `transfer_verified_file.py --gdrive-sync-config`.
+- `scripts/dexsculpt_catalog.py`: Searches DEX//SCULPT humanoid metadata (`status`, `search`, `sources`, `info`, `compatible`), resolves GLBs from local verified caches or on demand from a mounted Google Drive archive with SHA-256 + GLB v2 header verification, stages bounded assets to an authorized remote Blender host, and imports them non-destructively over MCP while excluding hidden `glTF_not_exported` bone-shape helpers. See [Catalog and Drive sync](docs/CATALOG_AND_DRIVE_SYNC.md).

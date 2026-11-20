@@ -20,6 +20,12 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+
+from sync_to_gdrive import sync_directory, sync_file
+
 
 REMOTE_PROBE = r'''import hashlib,json,os,stat,sys
 root,source=sys.argv[1:3]
@@ -87,6 +93,12 @@ def parse_args():
     parser.add_argument("--control-persist", type=int, default=300,
                         help="ControlPersist timeout in seconds when --multiplex is enabled (1..1800)")
     parser.add_argument("--timeout", type=int, default=300, help="SSH/SCP timeout in seconds (1..3600)")
+    parser.add_argument("--gdrive-sync-config", default=None,
+                        help="Optional private local DriveFS sync config JSON for opt-in MacBook -> Google Drive sync")
+    parser.add_argument("--gdrive-subdir", default=None,
+                        help="Optional subfolder under the configured Google Drive destination (defaults to destination root name)")
+    parser.add_argument("--gdrive-wait-seconds", type=int, default=180,
+                        help="Max seconds to wait for DriveFS upload verification when --gdrive-sync-config is set")
     return parser.parse_args()
 
 
@@ -396,11 +408,19 @@ def main():
                     timeout=args.timeout,
                 )
                 receipts.append({"artifact": key, **receipt})
-            print(json.dumps({
+            payload = {
                 "transfer_mode": args.transfer_mode,
                 "multiplex": args.multiplex,
                 "receipts": receipts,
-            }, indent=2, sort_keys=True))
+            }
+            if args.gdrive_sync_config:
+                payload["gdrive_sync"] = sync_directory(
+                    root,
+                    run_name=args.gdrive_subdir or root.name,
+                    config_path=Path(args.gdrive_sync_config),
+                    wait_upload_seconds=args.gdrive_wait_seconds,
+                )
+            print(json.dumps(payload, indent=2, sort_keys=True))
             return 0
 
         if not all([args.source_path, args.destination, args.sha256, args.bytes is not None]):
@@ -419,6 +439,13 @@ def main():
             expected_bytes=args.bytes,
             timeout=args.timeout,
         )
+        if args.gdrive_sync_config:
+            result["gdrive_sync"] = sync_file(
+                Path(args.destination),
+                subdir=args.gdrive_subdir or root.name,
+                config_path=Path(args.gdrive_sync_config),
+                wait_upload_seconds=args.gdrive_wait_seconds,
+            )
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
     finally:
@@ -437,6 +464,6 @@ def main():
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (OSError, ValueError, subprocess.SubprocessError, json.JSONDecodeError) as error:
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError, json.JSONDecodeError) as error:
         print(f"transfer failed: {error}", file=sys.stderr)
         raise SystemExit(1)

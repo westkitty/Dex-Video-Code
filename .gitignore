@@ -27,6 +27,8 @@ artifacts/
 media/pilot-a/renders/
 media/drakken-compendium-explainer/renders/
 media/drakken-compendium-explainer/__pycache__/
+__pycache__/
+*.pyc
 .cache/
 .DS_Store
 job-state.json

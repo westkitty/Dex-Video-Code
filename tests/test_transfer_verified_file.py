@@ -195,6 +195,72 @@ class VerifiedTransferTests(unittest.TestCase):
         self.assertEqual(self.destination.read_bytes(), self.data)
         self.assertEqual(json.loads(self.receipt.read_text())["status"], "DESTINATION_ALREADY_VERIFIED")
 
+    def test_multiplex_flags_and_manifest_proxy_mode(self):
+        remote_root = "/approved/export"
+        contact_bytes = b"PNG_CONTACT_SHEET_PROXY"
+        hero_bytes = b"PNG_HERO_MASTER_LARGE"
+        manifest = {
+            "artifacts": {
+                "contact_sheet_png": {
+                    "path": f"{remote_root}/scene_contact_sheet.png",
+                    "filename": "scene_contact_sheet.png",
+                    "bytes": len(contact_bytes),
+                    "sha256": hashlib.sha256(contact_bytes).hexdigest(),
+                },
+                "hero_png": {
+                    "path": f"{remote_root}/scene_hero.png",
+                    "filename": "scene_hero.png",
+                    "bytes": len(hero_bytes),
+                    "sha256": hashlib.sha256(hero_bytes).hexdigest(),
+                },
+            }
+        }
+        fake_ssh_manifest = f'''#!/usr/bin/env python3
+import hashlib,json,os,sys
+args=sys.argv[1:]
+assert "ControlMaster=auto" in args, f"missing ControlMaster: {{args}}"
+assert any(a.startswith("ControlPath=") for a in args), f"missing ControlPath: {{args}}"
+cmd=args[-1]
+if "REMOTE_CAT" in cmd or "sys.stdout.write" in cmd:
+    sys.stdout.write({json.dumps(json.dumps(manifest))})
+else:
+    data={repr(contact_bytes)} if "scene_contact_sheet.png" in cmd else {repr(hero_bytes)}
+    print(json.dumps({{"bytes":len(data),"sha256":hashlib.sha256(data).hexdigest()}}))
+'''
+        fake_scp_manifest = f'''#!/usr/bin/env python3
+import sys
+args=sys.argv[1:]
+assert "ControlMaster=auto" in args, f"missing ControlMaster in scp: {{args}}"
+src, dst = args[-2], args[-1]
+data = {repr(contact_bytes)} if "scene_contact_sheet.png" in src else {repr(hero_bytes)}
+open(dst, "wb").write(data)
+'''
+        self.write_executable(self.bin / "ssh", fake_ssh_manifest)
+        self.write_executable(self.bin / "scp", fake_scp_manifest)
+
+        proc = subprocess.run(
+            [
+                sys.executable, str(SCRIPT),
+                "--source-host", "testhost",
+                "--source-user", "andrew",
+                "--source-root", remote_root,
+                "--destination-root", str(self.destination_root),
+                "--manifest-path", f"{remote_root}/manifest.json",
+                "--transfer-mode", "proxy",
+                "--multiplex",
+                "--control-persist", "120",
+            ],
+            env=self.env, capture_output=True, text=True, timeout=20,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        out = json.loads(proc.stdout)
+        self.assertTrue(out["multiplex"])
+        self.assertEqual(out["transfer_mode"], "proxy")
+        self.assertEqual(len(out["receipts"]), 1)
+        self.assertEqual(out["receipts"][0]["artifact"], "contact_sheet_png")
+        self.assertTrue((self.destination_root / "scene_contact_sheet.png").is_file())
+        self.assertFalse((self.destination_root / "scene_hero.png").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

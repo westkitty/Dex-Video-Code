@@ -3,3 +3,4 @@ await mkdir('dist/schemas', {recursive:true});
 await cp('schemas/creative-job.v1.schema.json','dist/schemas/creative-job.v1.schema.json');
 await cp('schemas/creative-job.v1.1.schema.json','dist/schemas/creative-job.v1.1.schema.json');
 await cp('schemas/blender-worker-bridge.v1.schema.json','dist/schemas/blender-worker-bridge.v1.schema.json');
+await cp('schemas/render-optimization.v1.schema.json','dist/schemas/render-optimization.v1.schema.json');
